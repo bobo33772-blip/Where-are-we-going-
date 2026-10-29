@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fff7ed;
+  --foreground: #1c1917;
+  --card: #ffffff;
+  --muted: #78716c;
+  --line: #e7e5e4;
+  --accent: #ea580c;
+  --accent-strong: #c2410c;
+  --map-land: #fdba74;
+  --map-line: #fff7ed;
+  --map-sea: #e0f2fe;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1c1917;
+    --foreground: #fafaf9;
+    --card: #292524;
+    --muted: #a8a29e;
+    --line: #44403c;
+    --accent: #fb923c;
+    --accent-strong: #fdba74;
+    --map-land: #c2410c;
+    --map-line: #1c1917;
+    --map-sea: #0c4a6e;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --font-sans: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
