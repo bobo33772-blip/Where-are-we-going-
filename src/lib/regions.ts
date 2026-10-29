@@ -32,10 +32,19 @@ export function loadRegions(): Promise<Region[]> {
   return regionsPromise;
 }
 
-export function searchRegions(regions: Region[], query: string, limit = 8): Region[] {
+// 동네 이름이 직접 맞는 결과를 먼저 보여준다.
+// (예: "성산" → 성산읍·성산1동이 "창원시성산구 ○○동"보다 앞에)
+export function searchRegions(regions: Region[], query: string, limit = 10): Region[] {
   const terms = query.trim().split(/\s+/).filter(Boolean);
   if (terms.length === 0) return [];
-  return regions.filter((r) => terms.every((t) => r.fullName.includes(t))).slice(0, limit);
+  const last = terms.at(-1)!;
+  const rank = (r: Region) => (r.name === last ? 0 : r.name.startsWith(last) ? 1 : r.name.includes(last) ? 2 : 3);
+  return regions
+    .filter((r) => terms.every((t) => r.fullName.includes(t)))
+    .map((r) => ({ r, score: rank(r) }))
+    .sort((a, b) => a.score - b.score)
+    .slice(0, limit)
+    .map(({ r }) => r);
 }
 
 // 자주 쓰는 출발지. 좌표는 역사 위치 기준이며 직선거리 계산용이라 수백 m 오차는 괜찮다.

@@ -1,6 +1,7 @@
 "use client";
 
-import type { Origin, PlayerSession, RoomState } from "./types";
+import { ConvexError } from "convex/values";
+import type { PlayerSession } from "./types";
 
 // 방마다 내 참여 정보를 브라우저에 저장한다. 저장소를 못 쓰는 환경(사생활 보호 모드 등)에서도
 // 화면이 깨지지 않도록 모든 접근을 try/catch로 감싼다.
@@ -27,53 +28,14 @@ export function saveSession(code: string, session: PlayerSession) {
   }
 }
 
-export function clearSession(code: string) {
-  try {
-    localStorage.removeItem(sessionKey(code));
-  } catch {
-    // 무시
-  }
+// 참여자 비밀 토큰. 서버에는 해시만 저장된다.
+export function newPlayerToken(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function request<T>(path: string, init?: RequestInit & { token?: string }): Promise<T> {
-  const headers = new Headers(init?.headers);
-  if (init?.body) headers.set("Content-Type", "application/json");
-  if (init?.token) headers.set("x-player-token", init.token);
-
-  const res = await fetch(path, { ...init, headers, cache: "no-store" });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new ApiError(res.status, body.error ?? "잠시 문제가 생겼어요.");
-  return body as T;
+// Convex 함수가 던진 ConvexError는 사용자에게 보여줄 메시지를 담고 있다.
+export function errorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ConvexError && typeof error.data === "string") return error.data;
+  return fallback;
 }
-
-export class ApiError extends Error {
-  constructor(
-    public readonly status: number,
-    message: string,
-  ) {
-    super(message);
-  }
-}
-
-export const api = {
-  createRoom: (nickname: string) =>
-    request<{ code: string } & PlayerSession>("/api/rooms", {
-      method: "POST",
-      body: JSON.stringify({ nickname }),
-    }),
-
-  joinRoom: (code: string, nickname: string) =>
-    request<PlayerSession>(`/api/rooms/${code}/players`, {
-      method: "POST",
-      body: JSON.stringify({ nickname }),
-    }),
-
-  getRoom: (code: string) => request<RoomState>(`/api/rooms/${code}`),
-
-  setOrigin: (code: string, token: string, origin: Origin) =>
-    request<RoomState>(`/api/rooms/${code}`, {
-      method: "PATCH",
-      token,
-      body: JSON.stringify({ origin }),
-    }),
-};

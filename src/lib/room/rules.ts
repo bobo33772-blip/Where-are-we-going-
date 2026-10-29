@@ -1,15 +1,20 @@
-// 방 관련 규칙. 서버와 브라우저 양쪽에서 쓴다.
+// 방 관련 규칙. Convex 함수와 브라우저 양쪽에서 쓴다.
 
 export const MAX_PLAYERS = 8;
 export const NICKNAME_MAX_LENGTH = 12;
+export const ORIGIN_NAME_MAX_LENGTH = 40;
+
+// 접속 표시: 이 간격으로 하트비트를 보내고, 이 시간 안에 신호가 있었으면 접속 중으로 본다.
+export const HEARTBEAT_INTERVAL_MS = 30_000;
+export const ONLINE_WINDOW_MS = 75_000;
 
 // 헷갈리기 쉬운 문자(0/O, 1/I/L)는 뺐다.
 const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const CODE_LENGTH = 6;
 
+// 방 코드는 비밀이 아니라 공유용이므로 Math.random으로 충분하다.
 export function generateRoomCode(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(CODE_LENGTH));
-  return Array.from(bytes, (b) => CODE_ALPHABET[b % CODE_ALPHABET.length]).join("");
+  return Array.from({ length: CODE_LENGTH }, () => CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)]).join("");
 }
 
 export function normalizeRoomCode(input: string): string | null {
@@ -26,4 +31,17 @@ export function validateNickname(input: unknown): { ok: true; value: string } | 
     return { ok: false, error: `닉네임은 ${NICKNAME_MAX_LENGTH}자까지 쓸 수 있어요.` };
   }
   return { ok: true, value };
+}
+
+// 대한민국을 대략 감싸는 경계 상자 안의 좌표인지 확인한다.
+export function isValidOrigin(origin: { name: string; lat: number; lng: number }): boolean {
+  const name = origin.name.trim();
+  return (
+    name.length > 0 &&
+    name.length <= ORIGIN_NAME_MAX_LENGTH &&
+    origin.lat >= 33 &&
+    origin.lat <= 39 &&
+    origin.lng >= 124 &&
+    origin.lng <= 132
+  );
 }

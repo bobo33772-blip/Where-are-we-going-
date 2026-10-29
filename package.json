@@ -10,12 +10,11 @@
     "build:regions": "node scripts/build-regions.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.118.0",
+    "convex": "^1.48.0",
     "maplibre-gl": "^5.24.0",
     "next": "16.4.3",
     "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "server-only": "^0.0.1"
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
@@ -25,7 +24,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
     "mapshaper": "^0.7.101",
-    "supabase": "^2.122.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

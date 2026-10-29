@@ -1,12 +1,12 @@
 "use client";
 
+import { useMutation, useQuery } from "convex/react";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
-import { getBrowserClient } from "@/lib/supabase/browser";
-import { api, ApiError, loadSession, saveSession } from "./client";
-import { ROOM_UPDATED_EVENT, roomChannelName, type PlayerSession, type RoomState } from "./types";
+import { api } from "../../../convex/_generated/api";
+import { loadSession, saveSession } from "./client";
+import { HEARTBEAT_INTERVAL_MS, ONLINE_WINDOW_MS } from "./rules";
+import type { PlayerSession } from "./types";
 
-// 실시간 알림을 놓쳤을 때를 대비한 주기적 새로고침 간격
-const POLL_INTERVAL_MS = 15_000;
 const SESSION_CHANGED_EVENT = "wawg:session-changed";
 
 function subscribeSession(onChange: () => void) {
@@ -38,67 +38,34 @@ export function usePlayerSession(code: string) {
   return [session, save] as const;
 }
 
-function tryGetBrowserClient() {
-  try {
-    return getBrowserClient();
-  } catch (error) {
-    console.warn("실시간 연결을 건너뜁니다.", error);
-    return null;
-  }
+// 내가 접속해 있다고 주기적으로 알린다. 화면이 숨겨져 있으면 보내지 않는다.
+export function useHeartbeat(code: string, token: string | null) {
+  const heartbeat = useMutation(api.rooms.heartbeat);
+
+  useEffect(() => {
+    if (!token) return;
+    const beat = () => {
+      if (document.visibilityState === "visible") heartbeat({ code, token }).catch(() => {});
+    };
+    beat();
+    const timer = setInterval(beat, HEARTBEAT_INTERVAL_MS);
+    document.addEventListener("visibilitychange", beat);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", beat);
+    };
+  }, [code, token, heartbeat]);
 }
 
-type RoomStatus =
-  | { kind: "loading" }
-  | { kind: "ready"; room: RoomState }
-  | { kind: "error"; status: number; message: string };
-
-// 방 상태를 불러오고, 바뀔 때마다(실시간 알림 또는 주기적 확인) 다시 불러온다.
-// 같은 채널의 presence로 지금 접속해 있는 참여자도 알려준다.
-export function useRoom(code: string, playerId: string | null) {
-  const [status, setStatus] = useState<RoomStatus>({ kind: "loading" });
-  const [onlineIds, setOnlineIds] = useState<Set<string>>(new Set());
-
-  const refresh = useCallback(
-    () =>
-      api.getRoom(code).then(
-        (room) => setStatus({ kind: "ready", room }),
-        (error) => {
-          const status = error instanceof ApiError ? error.status : 0;
-          const message = error instanceof Error ? error.message : "방 정보를 불러오지 못했어요.";
-          // 이미 화면에 방이 떠 있으면 일시적인 오류로 화면을 지우지 않는다.
-          setStatus((prev) => (prev.kind === "ready" && status !== 404 ? prev : { kind: "error", status, message }));
-        },
-      ),
-    [code],
-  );
+// 지금 접속 중인 참여자 id 목록. 시간이 지나면 저절로 오프라인으로 바뀌도록 주기적으로 다시 계산한다.
+export function useOnlinePlayerIds(code: string): Set<string> {
+  const rows = useQuery(api.rooms.presence, { code });
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    void refresh();
-    const timer = setInterval(() => void refresh(), POLL_INTERVAL_MS);
+    const timer = setInterval(() => setNow(Date.now()), 10_000);
     return () => clearInterval(timer);
-  }, [refresh]);
+  }, []);
 
-  useEffect(() => {
-    const supabase = tryGetBrowserClient();
-    if (!supabase) return;
-
-    const channel = supabase.channel(roomChannelName(code), {
-      config: { presence: { key: playerId ?? "" } },
-    });
-
-    channel
-      .on("broadcast", { event: ROOM_UPDATED_EVENT }, () => void refresh())
-      .on("presence", { event: "sync" }, () => {
-        setOnlineIds(new Set(Object.keys(channel.presenceState()).filter(Boolean)));
-      })
-      .subscribe((state) => {
-        if (state === "SUBSCRIBED" && playerId) void channel.track({ playerId });
-      });
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [code, playerId, refresh]);
-
-  return { status, onlineIds, refresh, setRoom: (room: RoomState) => setStatus({ kind: "ready", room }) };
+  return new Set((rows ?? []).filter((r) => now - r.lastSeenAt < ONLINE_WINDOW_MS).map((r) => r.playerId));
 }

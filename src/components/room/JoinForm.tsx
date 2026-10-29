@@ -1,12 +1,15 @@
 "use client";
 
+import { useMutation } from "convex/react";
 import { useState, type FormEvent } from "react";
+import { api } from "../../../convex/_generated/api";
 import { Button, ErrorText, TextInput } from "@/components/ui";
-import { api } from "@/lib/room/client";
+import { errorMessage, newPlayerToken } from "@/lib/room/client";
 import { MAX_PLAYERS, NICKNAME_MAX_LENGTH } from "@/lib/room/rules";
 import type { PlayerSession, RoomState } from "@/lib/room/types";
 
 export function JoinForm({ room, onJoined }: { room: RoomState; onJoined: (session: PlayerSession) => void }) {
+  const join = useMutation(api.rooms.join);
   const [nickname, setNickname] = useState("");
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,9 +22,11 @@ export function JoinForm({ room, onJoined }: { room: RoomState; onJoined: (sessi
     setJoining(true);
     setError(null);
     try {
-      onJoined(await api.joinRoom(room.code, nickname));
+      const token = newPlayerToken();
+      const { playerId } = await join({ code: room.code, nickname, token });
+      onJoined({ playerId, token });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "참여하지 못했어요.");
+      setError(errorMessage(err, "참여하지 못했어요."));
       setJoining(false);
     }
   }

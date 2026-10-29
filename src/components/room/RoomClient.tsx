@@ -1,7 +1,9 @@
 "use client";
 
+import { useQuery } from "convex/react";
 import Link from "next/link";
-import { usePlayerSession, useRoom } from "@/lib/room/hooks";
+import { api } from "../../../convex/_generated/api";
+import { usePlayerSession } from "@/lib/room/hooks";
 import { normalizeRoomCode } from "@/lib/room/rules";
 import { JoinForm } from "./JoinForm";
 import { Lobby } from "./Lobby";
@@ -14,33 +16,25 @@ export function RoomClient({ rawCode }: { rawCode: string }) {
 
 function Room({ code }: { code: string }) {
   const [session, saveSession] = usePlayerSession(code);
-  const { status, onlineIds, refresh, setRoom } = useRoom(code, session?.playerId ?? null);
+  // Convex 쿼리는 구독이라 방 상태가 바뀌면 모든 참여자 화면이 바로 갱신된다.
+  const room = useQuery(api.rooms.get, { code });
 
-  if (session === undefined || status.kind === "loading") {
+  if (session === undefined || room === undefined) {
     return <RoomMessage title="방을 여는 중…" />;
   }
-  if (status.kind === "error") {
-    return <RoomMessage title={status.message} />;
+  if (room === null) {
+    return <RoomMessage title="방을 찾을 수 없어요." />;
   }
 
-  const room = status.room;
-  // 저장된 참여 정보가 이 방 참여자 목록에 없으면(방이 새로 만들어졌거나 정보가 오래됨) 다시 참여한다.
+  // 저장된 참여 정보가 이 방 참여자 목록에 없으면(정보가 오래됨) 다시 참여한다.
   const me = session ? room.players.find((p) => p.id === session.playerId) : undefined;
 
   if (!session || !me) {
-    return (
-      <JoinForm
-        room={room}
-        onJoined={(next) => {
-          saveSession(next);
-          void refresh();
-        }}
-      />
-    );
+    return <JoinForm room={room} onJoined={saveSession} />;
   }
 
   if (room.phase === "lobby") {
-    return <Lobby room={room} me={me} token={session.token} onlineIds={onlineIds} onRoomChange={setRoom} />;
+    return <Lobby room={room} me={me} token={session.token} />;
   }
 
   return <RoomMessage title="다음 단계는 준비 중이에요." />;

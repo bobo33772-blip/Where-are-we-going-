@@ -1,13 +1,16 @@
 "use client";
 
+import { useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { api } from "../../../convex/_generated/api";
 import { Button, ErrorText, TextInput } from "@/components/ui";
-import { api, saveSession } from "@/lib/room/client";
+import { errorMessage, newPlayerToken, saveSession } from "@/lib/room/client";
 import { NICKNAME_MAX_LENGTH, normalizeRoomCode } from "@/lib/room/rules";
 
 export function HomeActions() {
   const router = useRouter();
+  const createRoom = useMutation(api.rooms.create);
   const [nickname, setNickname] = useState("");
   const [code, setCode] = useState("");
   const [creating, setCreating] = useState(false);
@@ -19,11 +22,12 @@ export function HomeActions() {
     setCreating(true);
     setCreateError(null);
     try {
-      const { code, ...session } = await api.createRoom(nickname);
-      saveSession(code, session);
+      const token = newPlayerToken();
+      const { code, playerId } = await createRoom({ nickname, token });
+      saveSession(code, { playerId, token });
       router.push(`/room/${code}`);
     } catch (error) {
-      setCreateError(error instanceof Error ? error.message : "방을 만들지 못했어요.");
+      setCreateError(errorMessage(error, "방을 만들지 못했어요."));
       setCreating(false);
     }
   }

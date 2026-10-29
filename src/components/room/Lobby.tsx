@@ -1,9 +1,12 @@
 "use client";
 
+import { useMutation } from "convex/react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import { api } from "../../../convex/_generated/api";
 import { Button, ErrorText } from "@/components/ui";
-import { api } from "@/lib/room/client";
+import { errorMessage } from "@/lib/room/client";
+import { useHeartbeat, useOnlinePlayerIds } from "@/lib/room/hooks";
 import { MAX_PLAYERS } from "@/lib/room/rules";
 import type { Origin, PlayerView, RoomState } from "@/lib/room/types";
 import { OriginPicker } from "./OriginPicker";
@@ -20,21 +23,23 @@ type Props = {
   room: RoomState;
   me: PlayerView;
   token: string;
-  onlineIds: Set<string>;
-  onRoomChange: (room: RoomState) => void;
 };
 
-export function Lobby({ room, me, token, onlineIds, onRoomChange }: Props) {
+export function Lobby({ room, me, token }: Props) {
+  const setOrigin = useMutation(api.rooms.setOrigin);
   const [originError, setOriginError] = useState<string | null>(null);
   const [savingOrigin, setSavingOrigin] = useState(false);
+
+  useHeartbeat(room.code, token);
+  const onlineIds = useOnlinePlayerIds(room.code);
 
   async function handleOriginChange(origin: Origin) {
     setSavingOrigin(true);
     setOriginError(null);
     try {
-      onRoomChange(await api.setOrigin(room.code, token, origin));
+      await setOrigin({ code: room.code, token, origin });
     } catch (error) {
-      setOriginError(error instanceof Error ? error.message : "출발지를 저장하지 못했어요.");
+      setOriginError(errorMessage(error, "출발지를 저장하지 못했어요."));
     } finally {
       setSavingOrigin(false);
     }

@@ -44,6 +44,3 @@ next-env.d.ts
 # 경계 원본 데이터 (scripts/build-regions.mjs가 내려받음)
 /data/raw
 
-# 로컬 Supabase
-/supabase/.branches
-/supabase/.temp
