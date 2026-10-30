@@ -163,7 +163,8 @@ export const heartbeat = mutation({
 });
 
 // 참여자별 마지막 접속 시각. 접속 중인지는 브라우저가 현재 시각과 비교해 판단한다.
-// (쿼리는 결과가 캐시되므로 여기서 Date.now()로 판단하면 시간이 지나도 갱신되지 않는다)
+// (쿼리는 읽은 데이터가 바뀔 때만 다시 실행되고 시간이 흐르는 것만으로는 다시 실행되지 않으므로,
+// 여기서 Date.now()로 판단하면 결과가 오래된 채로 남는다)
 export const presence = query({
   args: { code: v.string() },
   handler: async (ctx, { code }) => {

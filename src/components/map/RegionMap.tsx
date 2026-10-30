@@ -54,13 +54,18 @@ export default function RegionMap({ origin }: { origin: Origin | null }) {
     map.addControl(
       new maplibregl.AttributionControl({
         compact: true,
-        customAttribution: "경계: 통계청 SGIS (가공 vuski/admdongkor, CC BY 4.0)",
+        // CC BY 4.0: 출처, 라이선스 링크, 변경 사실(이 서비스의 간소화)을 함께 표시한다.
+        customAttribution:
+          '경계: <a href="https://sgis.mods.go.kr" target="_blank" rel="noopener">국가데이터처(옛 통계청) SGIS</a> · ' +
+          '가공 <a href="https://github.com/vuski/admdongkor" target="_blank" rel="noopener">vuski/admdongkor</a> · ' +
+          "이 서비스에서 간소화 · " +
+          '<a href="https://creativecommons.org/licenses/by/4.0/deed.ko" target="_blank" rel="noopener">CC BY 4.0</a>',
       }),
     );
     // 작은 화면에서 출처 문구가 지도를 가리지 않도록 처음에는 접어 둔다. (ⓘ를 누르면 펼쳐진다)
-    map.once("load", () => {
-      containerRef.current?.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
-    });
+    // MapLibre는 컨트롤을 붙이는 즉시 펼친 상태로 만들므로, 붙인 직후에 접는다.
+    // (지도 로드 뒤에 접으면 그 전에 사용자가 펼친 것까지 접혀 버린다)
+    containerRef.current.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");
     mapRef.current = map;
 
     return () => {

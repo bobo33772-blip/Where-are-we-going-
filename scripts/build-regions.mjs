@@ -6,8 +6,9 @@
 //
 // 실행: npm run build:regions
 //
-// 원자료: 통계청 SGIS 행정동 경계 (공공누리 제1유형)
+// 원자료: 국가데이터처(옛 통계청) SGIS 행정동 경계 (공공누리 제1유형)
 // 가공: vuski/admdongkor (CC BY 4.0) — https://github.com/vuski/admdongkor
+// 이 스크립트의 변경: 경계 간소화, 코드 외 속성 제거, 대표점(inner point) 추출
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -79,7 +80,7 @@ async function buildList() {
     JSON.stringify({
       version: SOURCE_VERSION,
       attribution:
-        "통계청 SGIS 행정동 경계(공공누리 제1유형)를 vuski/admdongkor가 가공(CC BY 4.0)",
+        "국가데이터처(옛 통계청) SGIS 행정동 경계(공공누리 제1유형)를 vuski/admdongkor가 가공(CC BY 4.0)하고 이 서비스에서 간소화",
       regions,
     }),
   );
