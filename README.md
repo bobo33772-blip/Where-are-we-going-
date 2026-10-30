@@ -3,14 +3,16 @@
 친구들과 질문에 답할수록 지도가 줄어들고, 남은 땅에 다트를 던져 여행지를 정하는 웹앱.
 설계는 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), 만든 이유와 결정 근거는 [docs/DECISIONS.md](docs/DECISIONS.md)를 참고하세요.
 
-## 현재 구현된 것 (MVP 중 방·대기실 부분)
+## 현재 구현된 것 (MVP 중 방·대기실·기준 라운드)
 
 - 방 만들기 / 링크·코드로 참여 (로그인 없이 닉네임만, 최대 8명)
 - 대기실: 참여자 목록, 접속 표시, 친구 초대(공유·링크 복사)
 - 출발지 정하기 (방장만): 주요 역 바로가기 + 읍·면·동 검색
 - 읍·면·동 경계 지도 (3,559곳)
+- 기준 라운드(밸런스 게임): 모두 동시에 고르기 → 공개(동점이면 룰렛) → 지도가 줄어듦, 최대 5문제
+  - 질문 목록: `src/lib/game/questions.ts` (근거는 DECISIONS 2-1장)
 
-MVP의 남은 부분: 기준 라운드(밸런스 게임) → 다트 라운드 → 투표 → 결과 카드
+MVP의 남은 부분: 다트 라운드 → 투표 → 결과 카드
 
 ## 기술 구성
 
@@ -42,8 +44,10 @@ MVP의 남은 부분: 기준 라운드(밸런스 게임) → 다트 라운드 �
 ## 구조
 
 ```
-convex/schema.ts             DB 스키마 (rooms, players, presence)
+convex/schema.ts             DB 스키마 (rooms, players, presence, rounds, answers)
 convex/rooms.ts              방 함수 (만들기, 조회, 참여, 출발지 변경, 접속 표시)
+convex/game.ts               기준 라운드 함수 (시작, 고르기, 공개, 건너뛰기, 다음, 끝내기)
+src/lib/game/                지역 필터와 질문 목록 (서버·브라우저 공용)
 src/app/room/[code]/         방 화면
 src/components/room/         참여하기, 대기실, 출발지 선택
 src/components/map/          읍·면·동 지도
