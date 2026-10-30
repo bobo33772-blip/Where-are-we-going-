@@ -62,10 +62,10 @@ export const QUESTIONS: QuestionDef[] = [
       const median = Math.round(distances[Math.floor(distances.length / 2)] / 10) * 10;
       if (median < 10) return null;
       return {
-        title: "적당히 가까이 vs 최대한 멀리",
+        title: "가까운 쪽 vs 먼 쪽",
         options: [
-          option("A", "📍", "적당히 가까이", `출발지에서 직선 ${median}km 이내`, { kind: "distance", maxKm: median }),
-          option("B", "🚀", "최대한 멀리", `출발지에서 직선 ${median}km 넘게`, { kind: "distance", minKm: median }),
+          option("A", "📍", "가까운 쪽", `출발지에서 직선 ${median}km 이내`, { kind: "distance", maxKm: median }),
+          option("B", "🚀", "먼 쪽", `출발지에서 직선 ${median}km 넘게`, { kind: "distance", minKm: median }),
         ],
       };
     },
@@ -115,20 +115,20 @@ export const QUESTIONS: QuestionDef[] = [
   {
     id: "capital-area",
     build: () => ({
-      title: "수도권 vs 수도권 탈출",
+      title: "수도권 vs 비수도권",
       options: [
-        option("A", "🚇", "수도권 안에서", "서울·경기·인천", { kind: "sido", include: CAPITAL_AREA }),
-        option("B", "🏞️", "수도권 탈출", "서울·경기·인천 말고", { kind: "sido", exclude: CAPITAL_AREA }),
+        option("A", "🚇", "수도권", "서울·경기·인천", { kind: "sido", include: CAPITAL_AREA }),
+        option("B", "🏞️", "비수도권", "서울·경기·인천 말고", { kind: "sido", exclude: CAPITAL_AREA }),
       ],
     }),
   },
   {
     id: "jeju",
     build: () => ({
-      title: "바다 건너 제주 vs 육지에서 해결",
+      title: "제주도 vs 육지",
       options: [
-        option("A", "✈️", "바다 건너 제주", "제주특별자치도", { kind: "sido", include: JEJU }),
-        option("B", "🚄", "육지에서 해결", "제주 말고", { kind: "sido", exclude: JEJU }),
+        option("A", "🍊", "제주도", "제주특별자치도", { kind: "sido", include: JEJU }),
+        option("B", "⛰️", "육지", "제주 말고", { kind: "sido", exclude: JEJU }),
       ],
     }),
   },

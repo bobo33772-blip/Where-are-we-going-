@@ -26,20 +26,31 @@ export function loadRegions(): Promise<Region[]> {
   return regionsPromise;
 }
 
+// 받기에 실패하면 이 간격으로 다시 시도한다. (불안정한 모바일 네트워크 대비)
+const RETRY_DELAYS_MS = [2_000, 5_000, 10_000, 20_000];
+
 // 지역 목록을 불러오는 훅. 불러오는 중에는 regions가 null이다.
 export function useRegions() {
   const [state, setState] = useState<{ regions: Region[] | null; error: string | null }>({ regions: null, error: null });
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let alive = true;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
     loadRegions().then(
       (regions) => alive && setState({ regions, error: null }),
-      (error: Error) => alive && setState({ regions: null, error: error.message }),
+      (error: Error) => {
+        if (!alive) return;
+        const delay = RETRY_DELAYS_MS[attempt];
+        setState({ regions: null, error: delay ? `${error.message} 잠시 후 다시 시도할게요.` : `${error.message} 새로고침해 주세요.` });
+        if (delay) retryTimer = setTimeout(() => setAttempt((n) => n + 1), delay);
+      },
     );
     return () => {
       alive = false;
+      clearTimeout(retryTimer);
     };
-  }, []);
+  }, [attempt]);
 
   return state;
 }

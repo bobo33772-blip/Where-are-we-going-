@@ -22,9 +22,19 @@ export function CriteriaRound({ room, me, token }: Props) {
   const myAnswers = useQuery(api.game.myAnswers, { code: room.code, token });
   const current = room.rounds.find((r) => r.id === room.currentRoundId) ?? null;
 
-  // 동점이라 룰렛을 돌리는 동안에는 결과를 지도에 미리 반영하지 않는다. (결과 스포일러 방지)
-  const [rouletteDoneFor, setRouletteDoneFor] = useState<string | null>(null);
-  const rouletteRunning = current?.status === "revealed" && current.result?.tie === true && rouletteDoneFor !== current.id;
+  // 동점 룰렛은 이 화면에서 공개 순간(질문이 열림 → 공개됨)을 직접 본 경우에만 돌린다.
+  // 새로고침하거나 늦게 들어와서 이미 공개된 결과를 볼 때는 룰렛 없이 결과를 바로 보여준다.
+  // (렌더링 중에 이전 상태와 비교해 갱신하는 React 권장 방식)
+  const [seen, setSeen] = useState<{ id: string; status: RoundView["status"] } | null>(null);
+  const [rouletteFor, setRouletteFor] = useState<string | null>(null);
+  if (current && (seen?.id !== current.id || seen.status !== current.status)) {
+    if (seen?.id === current.id && seen.status === "open" && current.status === "revealed" && current.result?.tie) {
+      setRouletteFor(current.id);
+    }
+    setSeen({ id: current.id, status: current.status });
+  }
+  // 룰렛이 도는 동안에는 결과를 지도에 미리 반영하지 않는다. (결과 스포일러 방지)
+  const rouletteRunning = current?.status === "revealed" && rouletteFor === current.id;
   const remaining = useRemaining(regions, room.origin, room.rounds, rouletteRunning && current ? current.id : null);
 
   const revealedCount = room.rounds.filter((r) => r.status === "revealed").length;
@@ -54,7 +64,7 @@ export function CriteriaRound({ room, me, token }: Props) {
       )}
       {current?.status === "revealed" &&
         (rouletteRunning ? (
-          <Roulette round={current} onDone={() => setRouletteDoneFor(current.id)} />
+          <Roulette round={current} onDone={() => setRouletteFor(null)} />
         ) : (
           <ResultCard room={room} me={me} token={token} round={current} />
         ))}

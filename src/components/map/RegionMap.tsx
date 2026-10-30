@@ -35,6 +35,8 @@ export default function RegionMap({ origin, excludedCodes = null, focusPoints = 
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
   const shownExcludedRef = useRef<Set<string>>(new Set());
+  // 지도를 처음 그릴 때(새로고침, 늦게 들어옴)는 이미 지워진 지역을 번쩍임 없이 바로 어둡게 칠한다.
+  const firstPaintRef = useRef(true);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -111,6 +113,8 @@ export default function RegionMap({ origin, excludedCodes = null, focusPoints = 
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !loaded) return;
+    // 지역 목록을 아직 받는 중이면, 첫 칠하기를 실제 기준이 들어올 때까지 미룬다.
+    if (firstPaintRef.current && excludedCodes === null) return;
 
     const next = excludedCodes ?? new Set<string>();
     const shown = shownExcludedRef.current;
@@ -118,9 +122,15 @@ export default function RegionMap({ origin, excludedCodes = null, focusPoints = 
     const returning = [...shown].filter((code) => !next.has(code));
 
     for (const id of returning) map.setFeatureState({ source: "regions", id }, { out: false, leaving: false });
-    for (const id of leaving) map.setFeatureState({ source: "regions", id }, { leaving: true });
     shownExcludedRef.current = new Set(next);
 
+    if (firstPaintRef.current) {
+      firstPaintRef.current = false;
+      for (const id of leaving) map.setFeatureState({ source: "regions", id }, { out: true });
+      return;
+    }
+
+    for (const id of leaving) map.setFeatureState({ source: "regions", id }, { leaving: true });
     if (leaving.length === 0) return;
     const settle = () => {
       for (const id of leaving) {
@@ -136,12 +146,18 @@ export default function RegionMap({ origin, excludedCodes = null, focusPoints = 
   }, [excludedCodes, loaded]);
 
   // 남은 지역이 한눈에 보이도록 지도를 맞춘다.
+  const firstFocusRef = useRef(true);
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !loaded || !focusPoints || focusPoints.length === 0) return;
     const bounds = new maplibregl.LngLatBounds();
     for (const p of focusPoints) bounds.extend([p.lng, p.lat]);
-    // 지역이 지워지는 연출을 먼저 보여준 뒤 움직인다.
+    // 처음 그릴 때는 바로 맞추고, 그 뒤에는 지역이 지워지는 연출을 먼저 보여준 뒤 움직인다.
+    if (firstFocusRef.current) {
+      firstFocusRef.current = false;
+      map.fitBounds(bounds, { padding: 32, maxZoom: 9, duration: 0 });
+      return;
+    }
     const timer = setTimeout(() => map.fitBounds(bounds, { padding: 32, maxZoom: 9, duration: 1200 }), LEAVING_MS);
     return () => clearTimeout(timer);
   }, [focusPoints, loaded]);
