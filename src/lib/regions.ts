@@ -1,16 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import type { RegionLite } from "./game/filters";
 import type { Origin } from "./room/types";
 
-export type Region = {
-  code: string;
-  name: string;
-  fullName: string;
-  sido: string;
-  sgg: string;
-  lat: number;
-  lng: number;
-};
+export type Region = RegionLite;
 
 export const REGIONS_URL = "/data/regions.json";
 export const BOUNDARIES_URL = "/data/regions.geojson";
@@ -30,6 +24,24 @@ export function loadRegions(): Promise<Region[]> {
       throw error;
     });
   return regionsPromise;
+}
+
+// 지역 목록을 불러오는 훅. 불러오는 중에는 regions가 null이다.
+export function useRegions() {
+  const [state, setState] = useState<{ regions: Region[] | null; error: string | null }>({ regions: null, error: null });
+
+  useEffect(() => {
+    let alive = true;
+    loadRegions().then(
+      (regions) => alive && setState({ regions, error: null }),
+      (error: Error) => alive && setState({ regions: null, error: error.message }),
+    );
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  return state;
 }
 
 // 동네 이름이 직접 맞는 결과를 먼저 보여준다.

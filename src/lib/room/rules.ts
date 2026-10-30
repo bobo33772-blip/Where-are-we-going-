@@ -1,6 +1,7 @@
 // 방 관련 규칙. Convex 함수와 브라우저 양쪽에서 쓴다.
 
 export const MAX_PLAYERS = 8;
+export const MIN_PLAYERS_TO_START = 2;
 export const NICKNAME_MAX_LENGTH = 12;
 export const ORIGIN_NAME_MAX_LENGTH = 40;
 

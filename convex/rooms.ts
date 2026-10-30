@@ -1,63 +1,19 @@
 import { ConvexError, v } from "convex/values";
-import { mutation, query, type QueryCtx } from "./_generated/server";
-import type { Doc } from "./_generated/dataModel";
+import { mutation, query } from "./_generated/server";
 import { origin as originValidator } from "./schema";
+import { findRoom, hashToken, listPlayers, requireHost, requirePlayer, requireRoom, tokenArg } from "./lib/access";
 import {
   generateRoomCode,
   HEARTBEAT_INTERVAL_MS,
   isValidOrigin,
   MAX_PLAYERS,
-  normalizeRoomCode,
   validateNickname,
 } from "../src/lib/room/rules";
-
-// 참여자 토큰은 브라우저가 만들어 보내고, 여기서는 해시만 저장한다.
-// (Convex 함수 안의 난수는 결정적으로 시드되므로 비밀값 생성에 쓰지 않는다)
-const tokenArg = v.string();
-
-async function hashToken(token: string): Promise<string> {
-  if (token.length < 32 || token.length > 128) throw new ConvexError("참여 정보가 올바르지 않아요.");
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
-  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
-}
 
 function requireNickname(input: string): string {
   const result = validateNickname(input);
   if (!result.ok) throw new ConvexError(result.error);
   return result.value;
-}
-
-async function findRoom(ctx: QueryCtx, rawCode: string): Promise<Doc<"rooms"> | null> {
-  const code = normalizeRoomCode(rawCode);
-  if (!code) return null;
-  return ctx.db
-    .query("rooms")
-    .withIndex("by_code", (q) => q.eq("code", code))
-    .unique();
-}
-
-async function requireRoom(ctx: QueryCtx, rawCode: string): Promise<Doc<"rooms">> {
-  const room = await findRoom(ctx, rawCode);
-  if (!room) throw new ConvexError("방을 찾을 수 없어요.");
-  return room;
-}
-
-// 토큰이 이 방의 어느 참여자인지 확인한다.
-async function requirePlayer(ctx: QueryCtx, room: Doc<"rooms">, token: string): Promise<Doc<"players">> {
-  const tokenHash = await hashToken(token);
-  const player = await ctx.db
-    .query("players")
-    .withIndex("by_room_token", (q) => q.eq("roomId", room._id).eq("tokenHash", tokenHash))
-    .unique();
-  if (!player) throw new ConvexError("이 방의 참여자가 아니에요.");
-  return player;
-}
-
-async function listPlayers(ctx: QueryCtx, room: Doc<"rooms">) {
-  return ctx.db
-    .query("players")
-    .withIndex("by_room", (q) => q.eq("roomId", room._id))
-    .collect();
 }
 
 // 방 상태. 방이 없으면 null을 돌려준다.
@@ -67,6 +23,10 @@ export const get = query({
     const room = await findRoom(ctx, code);
     if (!room) return null;
     const players = await listPlayers(ctx, room);
+    const rounds = await ctx.db
+      .query("rounds")
+      .withIndex("by_room", (q) => q.eq("roomId", room._id))
+      .collect();
     return {
       code: room.code,
       phase: room.phase,
@@ -77,6 +37,28 @@ export const get = query({
         turnOrder: p.turnOrder,
         isHost: p._id === room.hostPlayerId,
       })),
+      currentRoundId: room.currentRoundId ?? null,
+      rounds: await Promise.all(
+        rounds.map(async (r) => {
+          const answers = await ctx.db
+            .query("answers")
+            .withIndex("by_round", (q) => q.eq("roundId", r._id))
+            .collect();
+          return {
+            id: r._id,
+            index: r.index,
+            questionId: r.questionId,
+            title: r.title,
+            options: r.options,
+            status: r.status,
+            result: r.result ?? null,
+            canContinue: r.canContinue ?? null,
+            answeredPlayerIds: answers.map((a) => a.playerId),
+            // 누가 무엇을 골랐는지는 공개된 질문만 보낸다. (공개 전에 다른 사람 선택이 새지 않게)
+            votes: r.status === "revealed" ? answers.map((a) => ({ playerId: a.playerId, choice: a.choice })) : null,
+          };
+        }),
+      ),
     };
   },
 });
@@ -132,8 +114,7 @@ export const setOrigin = mutation({
   args: { code: v.string(), token: tokenArg, origin: originValidator },
   handler: async (ctx, { code, token, origin }) => {
     const room = await requireRoom(ctx, code);
-    const player = await requirePlayer(ctx, room, token);
-    if (player._id !== room.hostPlayerId) throw new ConvexError("출발지는 방장만 정할 수 있어요.");
+    await requireHost(ctx, room, token, "출발지 정하기");
     if (room.phase !== "lobby") throw new ConvexError("이미 시작한 방이에요.");
     if (!isValidOrigin(origin)) throw new ConvexError("출발지 정보가 올바르지 않아요.");
 

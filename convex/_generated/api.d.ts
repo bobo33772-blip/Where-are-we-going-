@@ -8,6 +8,9 @@
  * @module
  */
 
+import type * as game from "../game.js";
+import type * as lib_access from "../lib/access.js";
+import type * as lib_regions from "../lib/regions.js";
 import type * as rooms from "../rooms.js";
 
 import type {
@@ -17,6 +20,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  game: typeof game;
+  "lib/access": typeof lib_access;
+  "lib/regions": typeof lib_regions;
   rooms: typeof rooms;
 }>;
 

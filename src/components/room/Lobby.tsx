@@ -1,23 +1,15 @@
 "use client";
 
 import { useMutation } from "convex/react";
-import dynamic from "next/dynamic";
 import { useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import { Button, ErrorText } from "@/components/ui";
 import { errorMessage } from "@/lib/room/client";
-import { useHeartbeat, useOnlinePlayerIds } from "@/lib/room/hooks";
-import { MAX_PLAYERS } from "@/lib/room/rules";
+import { LazyRegionMap } from "@/components/map/LazyRegionMap";
+import { useOnlinePlayerIds } from "@/lib/room/hooks";
+import { MAX_PLAYERS, MIN_PLAYERS_TO_START } from "@/lib/room/rules";
 import type { Origin, PlayerView, RoomState } from "@/lib/room/types";
 import { OriginPicker } from "./OriginPicker";
-
-// 지도 라이브러리는 브라우저에서만 동작한다.
-const RegionMap = dynamic(() => import("@/components/map/RegionMap"), {
-  ssr: false,
-  loading: () => <div className="h-full w-full animate-pulse bg-line" />,
-});
-
-const MIN_PLAYERS_TO_START = 2;
 
 type Props = {
   room: RoomState;
@@ -27,10 +19,12 @@ type Props = {
 
 export function Lobby({ room, me, token }: Props) {
   const setOrigin = useMutation(api.rooms.setOrigin);
+  const startGame = useMutation(api.game.start);
   const [originError, setOriginError] = useState<string | null>(null);
   const [savingOrigin, setSavingOrigin] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
 
-  useHeartbeat(room.code, token);
   const onlineIds = useOnlinePlayerIds(room.code);
 
   async function handleOriginChange(origin: Origin) {
@@ -42,6 +36,17 @@ export function Lobby({ room, me, token }: Props) {
       setOriginError(errorMessage(error, "출발지를 저장하지 못했어요."));
     } finally {
       setSavingOrigin(false);
+    }
+  }
+
+  async function handleStart() {
+    setStarting(true);
+    setStartError(null);
+    try {
+      await startGame({ code: room.code, token });
+    } catch (error) {
+      setStartError(errorMessage(error, "게임을 시작하지 못했어요."));
+      setStarting(false);
     }
   }
 
@@ -87,14 +92,16 @@ export function Lobby({ room, me, token }: Props) {
         )}
         <ErrorText>{originError}</ErrorText>
         <div className="h-72 overflow-hidden rounded-xl border border-line">
-          <RegionMap origin={room.origin} />
+          <LazyRegionMap origin={room.origin} />
         </div>
       </section>
 
       {me.isHost ? (
         <div className="flex flex-col gap-2">
-          {/* 기준 라운드는 다음 개발 단계에서 연결한다. */}
-          <Button disabled>{readyToStart ? "게임 시작 (다음 단계에서 열려요)" : "게임 시작"}</Button>
+          <Button disabled={!readyToStart || starting} onClick={handleStart}>
+            {starting ? "시작하는 중…" : "게임 시작"}
+          </Button>
+          <ErrorText>{startError}</ErrorText>
           {!readyToStart && (
             <p className="text-center text-sm text-muted">
               출발지를 정하고 친구가 {MIN_PLAYERS_TO_START}명 이상 모이면 시작할 수 있어요.
