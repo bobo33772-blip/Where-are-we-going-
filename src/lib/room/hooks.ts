@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { api } from "../../../convex/_generated/api";
 import { loadSession, saveSession } from "./client";
-import { HEARTBEAT_INTERVAL_MS, ONLINE_WINDOW_MS } from "./rules";
+import { HEARTBEAT_INTERVAL_MS, HOST_AWAY_MS, ONLINE_WINDOW_MS } from "./rules";
 import type { PlayerSession } from "./types";
 
 const SESSION_CHANGED_EVENT = "wawg:session-changed";
@@ -59,6 +59,11 @@ export function useHeartbeat(code: string, token: string | null) {
 
 // 지금 접속 중인 참여자 id 목록. 시간이 지나면 저절로 오프라인으로 바뀌도록 주기적으로 다시 계산한다.
 export function useOnlinePlayerIds(code: string): Set<string> {
+  const { rows, now } = usePresence(code);
+  return new Set((rows ?? []).filter((r) => now - r.lastSeenAt < ONLINE_WINDOW_MS).map((r) => r.playerId));
+}
+
+function usePresence(code: string) {
   const rows = useQuery(api.rooms.presence, { code });
   const [now, setNow] = useState(() => Date.now());
 
@@ -67,5 +72,13 @@ export function useOnlinePlayerIds(code: string): Set<string> {
     return () => clearInterval(timer);
   }, []);
 
-  return new Set((rows ?? []).filter((r) => now - r.lastSeenAt < ONLINE_WINDOW_MS).map((r) => r.playerId));
+  return { rows, now };
+}
+
+// 방장이 오래 접속하지 않았는지. 그러면 다른 참여자가 방장을 이어받을 수 있다. (서버도 같은 기준으로 확인한다)
+export function useHostAway(code: string, hostId: string | null): boolean {
+  const { rows, now } = usePresence(code);
+  if (!rows || !hostId) return false;
+  const host = rows.find((r) => r.playerId === hostId);
+  return !host || now - host.lastSeenAt >= HOST_AWAY_MS;
 }

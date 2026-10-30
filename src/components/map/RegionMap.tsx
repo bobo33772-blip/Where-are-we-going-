@@ -20,17 +20,45 @@ function cssVar(name: string) {
 // 지워지는 지역이 잠깐 이 색으로 번쩍인 뒤 어두워진다.
 const LEAVING_MS = 900;
 
+export type MapPin = {
+  id: string;
+  lat: number;
+  lng: number;
+  label: string;
+  // hit: 후보, miss: 빗나간 다트, winner: 최종 여행지
+  tone: "hit" | "miss" | "winner";
+};
+
+const PIN_STYLE: Record<MapPin["tone"], string> = {
+  hit: "bg-white text-stone-900",
+  miss: "bg-stone-200/90 text-stone-500",
+  winner: "bg-red-600 text-white text-sm",
+};
+
 type Props = {
   origin: Origin | null;
   // 기준에 맞지 않아 지워진 읍·면·동 코드. null이면 아무것도 지우지 않는다.
   excludedCodes?: Set<string> | null;
   // 지도를 이 점들이 모두 보이도록 맞춘다. (남은 지역의 대표점)
   focusPoints?: Point[] | null;
+  // 다트 같은 표시
+  pins?: MapPin[];
+  // 이 표시로 지도를 이동한다. (방금 던진 다트)
+  flyToPin?: MapPin | null;
+  // 강조할 지역 (최종 여행지)
+  highlightCode?: string | null;
 };
 
 // 배경 지도 타일 없이 읍·면·동 경계만 그리는 지도.
 // 기준 라운드에서 지역이 지워지는 연출, 다트 라운드의 다트 연출도 이 위에 얹는다.
-export default function RegionMap({ origin, excludedCodes = null, focusPoints = null }: Props) {
+export default function RegionMap({
+  origin,
+  excludedCodes = null,
+  focusPoints = null,
+  pins = [],
+  flyToPin = null,
+  highlightCode = null,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
@@ -64,6 +92,8 @@ export default function RegionMap({ origin, excludedCodes = null, focusPoints = 
             paint: {
               "fill-color": [
                 "case",
+                ["boolean", ["feature-state", "winner"], false],
+                cssVar("--map-leaving"),
                 ["boolean", ["feature-state", "leaving"], false],
                 cssVar("--map-leaving"),
                 ["boolean", ["feature-state", "out"], false],
@@ -177,6 +207,60 @@ export default function RegionMap({ origin, excludedCodes = null, focusPoints = 
       .setLngLat([origin.lng, origin.lat])
       .addTo(map);
   }, [origin]);
+
+  // 다트 표시: id가 같은 표시는 그대로 두고, 새로 생기거나 바뀐 것만 다시 그린다.
+  const pinMarkersRef = useRef(new Map<string, { marker: maplibregl.Marker; key: string }>());
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const current = pinMarkersRef.current;
+    const wanted = new Set(pins.map((p) => p.id));
+    for (const [id, { marker }] of current) {
+      if (!wanted.has(id)) {
+        marker.remove();
+        current.delete(id);
+      }
+    }
+    for (const pin of pins) {
+      const key = `${pin.lat},${pin.lng},${pin.label},${pin.tone}`;
+      const existing = current.get(pin.id);
+      if (existing?.key === key) continue;
+      existing?.marker.remove();
+      const el = document.createElement("div");
+      el.className = `rounded-full px-2 py-0.5 text-xs font-bold shadow-md whitespace-nowrap ${PIN_STYLE[pin.tone]}`;
+      el.textContent = pin.label;
+      const marker = new maplibregl.Marker({ element: el, anchor: "bottom" }).setLngLat([pin.lng, pin.lat]).addTo(map);
+      current.set(pin.id, { marker, key });
+    }
+  }, [pins]);
+
+  useEffect(() => {
+    const markers = pinMarkersRef.current;
+    return () => {
+      for (const { marker } of markers.values()) marker.remove();
+      markers.clear();
+    };
+  }, []);
+
+  // 방금 던진 다트로 이동
+  const flyId = flyToPin?.id ?? null;
+  const flyLat = flyToPin?.lat;
+  const flyLng = flyToPin?.lng;
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !loaded || flyId === null || flyLat === undefined || flyLng === undefined) return;
+    map.flyTo({ center: [flyLng, flyLat], zoom: Math.min(Math.max(map.getZoom(), 6.5), 8), duration: 1400 });
+  }, [flyId, flyLat, flyLng, loaded]);
+
+  // 최종 여행지 강조
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !loaded || !highlightCode) return;
+    map.setFeatureState({ source: "regions", id: highlightCode }, { winner: true });
+    return () => {
+      if (mapRef.current === map) map.setFeatureState({ source: "regions", id: highlightCode }, { winner: false });
+    };
+  }, [highlightCode, loaded]);
 
   return <div ref={containerRef} className="h-full w-full" aria-label="대한민국 읍·면·동 지도" role="img" />;
 }

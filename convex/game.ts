@@ -10,16 +10,10 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { optionKey } from "./schema";
 import { listPlayers, requireHost, requirePlayer, requireRoom, tokenArg } from "./lib/access";
 import { REGIONS } from "./lib/regions";
+import { listRounds } from "./lib/state";
 import { chosenFilters, MAX_QUESTIONS, validCandidates, type OptionKey } from "../src/lib/game/questions";
 import { MIN_PLAYERS_TO_START } from "../src/lib/room/rules";
 
-
-async function listRounds(ctx: MutationCtx, roomId: Id<"rooms">) {
-  return ctx.db
-    .query("rounds")
-    .withIndex("by_room", (q) => q.eq("roomId", roomId))
-    .collect();
-}
 
 function nextCandidates(room: Doc<"rooms">, rounds: Doc<"rounds">[]) {
   if (!room.origin) return [];

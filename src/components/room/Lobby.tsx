@@ -20,6 +20,7 @@ type Props = {
 export function Lobby({ room, me, token }: Props) {
   const setOrigin = useMutation(api.rooms.setOrigin);
   const startGame = useMutation(api.game.start);
+  const transferHost = useMutation(api.rooms.transferHost);
   const [originError, setOriginError] = useState<string | null>(null);
   const [savingOrigin, setSavingOrigin] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
@@ -76,6 +77,19 @@ export function Lobby({ room, me, token }: Props) {
               <span className="font-medium">{p.nickname}</span>
               {p.isHost && <span className="text-sm">👑</span>}
               {p.id === me.id && <span className="text-sm text-muted">(나)</span>}
+              {me.isHost && p.id !== me.id && (
+                <button
+                  type="button"
+                  className="ml-auto rounded-lg px-2 py-1 text-xs text-muted hover:text-accent"
+                  onClick={() =>
+                    transferHost({ code: room.code, token, playerId: p.id }).catch((error) =>
+                      setStartError(errorMessage(error, "방장을 넘기지 못했어요.")),
+                    )
+                  }
+                >
+                  👑 방장 넘기기
+                </button>
+              )}
             </li>
           ))}
         </ul>

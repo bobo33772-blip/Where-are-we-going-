@@ -3,16 +3,16 @@
 친구들과 질문에 답할수록 지도가 줄어들고, 남은 땅에 다트를 던져 여행지를 정하는 웹앱.
 설계는 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), 만든 이유와 결정 근거는 [docs/DECISIONS.md](docs/DECISIONS.md)를 참고하세요.
 
-## 현재 구현된 것 (MVP 중 방·대기실·기준 라운드)
+## 현재 구현된 것 (MVP)
 
-- 방 만들기 / 링크·코드로 참여 (로그인 없이 닉네임만, 최대 8명)
-- 대기실: 참여자 목록, 접속 표시, 친구 초대(공유·링크 복사)
-- 출발지 정하기 (방장만): 주요 역 바로가기 + 읍·면·동 검색
-- 읍·면·동 경계 지도 (3,559곳)
+- 방 만들기 / 링크·코드로 참여 (로그인 없이 닉네임만, 최대 8명), 방장 넘기기·이어받기
+- 대기실: 참여자 목록, 접속 표시, 친구 초대(공유·링크 복사), 출발지 정하기
 - 기준 라운드(밸런스 게임): 모두 동시에 고르기 → 공개(동점이면 룰렛) → 지도가 줄어듦, 최대 5문제
   - 질문 목록: `src/lib/game/questions.ts` (근거는 DECISIONS 2-1장)
+- 다트 라운드: 차례대로 던지기, 바다·기준 밖이면 다시(최대 3번), 착지는 서버가 판정
+- 최종 투표 → 결과 화면 → 릴스·스토리용 결과 카드(9:16 이미지) 저장·공유
 
-MVP의 남은 부분: 다트 라운드 → 투표 → 결과 카드
+남은 것: 배포, 여행 인프라 질문(관광공사 인증키 필요), 2단계(자작 질문 + AI, 기록장)
 
 ## 기술 구성
 
@@ -44,16 +44,18 @@ MVP의 남은 부분: 다트 라운드 → 투표 → 결과 카드
 ## 구조
 
 ```
-convex/schema.ts             DB 스키마 (rooms, players, presence, rounds, answers)
+convex/schema.ts             DB 스키마 (rooms, players, presence, rounds, answers, throws, votes)
 convex/rooms.ts              방 함수 (만들기, 조회, 참여, 출발지 변경, 접속 표시)
 convex/game.ts               기준 라운드 함수 (시작, 고르기, 공개, 건너뛰기, 다음, 끝내기)
-src/lib/game/                지역 필터와 질문 목록 (서버·브라우저 공용)
+convex/darts.ts              다트·투표 함수 (던지기, 투표 시작, 투표, 결과 공개)
+src/lib/game/                지역 필터, 질문 목록, 다트 판정 (서버·브라우저 공용)
+src/lib/card.ts              결과 카드 이미지 그리기
 src/app/room/[code]/         방 화면
 src/components/room/         참여하기, 대기실, 출발지 선택
 src/components/map/          읍·면·동 지도
 src/lib/room/                방 규칙(서버·브라우저 공용), 참여 정보 저장, 훅
 scripts/build-regions.mjs    경계 데이터 가공 스크립트
-public/data/                 가공된 경계(regions.geojson)와 지역 목록(regions.json)
+public/data/                 가공된 경계(boundaries.json)와 지역 목록(regions.json)
 ```
 
 ### 보안 방식

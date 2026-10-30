@@ -5,6 +5,7 @@ import { findRoom, hashToken, listPlayers, requireHost, requirePlayer, requireRo
 import {
   generateRoomCode,
   HEARTBEAT_INTERVAL_MS,
+  HOST_AWAY_MS,
   isValidOrigin,
   MAX_PLAYERS,
   validateNickname,
@@ -27,6 +28,14 @@ export const get = query({
       .query("rounds")
       .withIndex("by_room", (q) => q.eq("roomId", room._id))
       .collect();
+    const throws = await ctx.db
+      .query("throws")
+      .withIndex("by_room", (q) => q.eq("roomId", room._id))
+      .collect();
+    const votes = await ctx.db
+      .query("votes")
+      .withIndex("by_room", (q) => q.eq("roomId", room._id))
+      .collect();
     return {
       code: room.code,
       phase: room.phase,
@@ -38,6 +47,20 @@ export const get = query({
         isHost: p._id === room.hostPlayerId,
       })),
       currentRoundId: room.currentRoundId ?? null,
+      throws: throws.map((t) => ({
+        id: t._id,
+        playerId: t.playerId,
+        attempt: t.attempt,
+        lat: t.lat,
+        lng: t.lng,
+        outcome: t.outcome,
+        regionCode: t.regionCode ?? null,
+        byHost: t.byHost,
+      })),
+      // 누가 어디를 골랐는지는 결과가 나온 뒤에만 보낸다.
+      votedPlayerIds: votes.map((v) => v.playerId),
+      votes: room.result ? votes.map((v) => ({ playerId: v.playerId, regionCode: v.regionCode })) : null,
+      result: room.result ?? null,
       rounds: await Promise.all(
         rounds.map(async (r) => {
           const answers = await ctx.db
@@ -156,5 +179,38 @@ export const presence = query({
       .withIndex("by_room", (q) => q.eq("roomId", room._id))
       .collect();
     return rows.map((r) => ({ playerId: r.playerId, lastSeenAt: r.lastSeenAt }));
+  },
+});
+
+// 방장 넘기기 (방장이 직접)
+export const transferHost = mutation({
+  args: { code: v.string(), token: tokenArg, playerId: v.id("players") },
+  handler: async (ctx, { code, token, playerId }) => {
+    const room = await requireRoom(ctx, code);
+    await requireHost(ctx, room, token, "방장 넘기기");
+    const target = await ctx.db.get(playerId);
+    if (!target || target.roomId !== room._id) throw new ConvexError("이 방의 참여자가 아니에요.");
+    await ctx.db.patch(room._id, { hostPlayerId: target._id });
+  },
+});
+
+// 방장 넘겨받기. 방장이 오래 접속하지 않아 진행이 멈췄을 때 다른 참여자가 이어받는다.
+export const claimHost = mutation({
+  args: { code: v.string(), token: tokenArg },
+  handler: async (ctx, { code, token }) => {
+    const room = await requireRoom(ctx, code);
+    const player = await requirePlayer(ctx, room, token);
+    if (player._id === room.hostPlayerId) return;
+
+    const hostPresence = room.hostPlayerId
+      ? await ctx.db
+          .query("presence")
+          .withIndex("by_player", (q) => q.eq("playerId", room.hostPlayerId!))
+          .unique()
+      : null;
+    if (hostPresence && Date.now() - hostPresence.lastSeenAt < HOST_AWAY_MS) {
+      throw new ConvexError("방장이 아직 접속해 있어요.");
+    }
+    await ctx.db.patch(room._id, { hostPlayerId: player._id });
   },
 });

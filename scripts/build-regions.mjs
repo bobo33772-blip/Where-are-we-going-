@@ -1,7 +1,7 @@
 // 읍·면·동 경계 원본(GeoJSON)을 웹에서 쓰기 좋은 크기로 가공한다.
 //
 // 출력
-//   public/data/regions.geojson  지도 표시와 다트 판정용 간소화 경계 (속성: code)
+//   public/data/boundaries.json   지도 표시와 다트 판정용 간소화 경계 (속성: code)
 //   public/data/regions.json     지역 목록 (코드, 이름, 시도, 시군구, 대표 좌표)
 //
 // 실행: npm run build:regions
@@ -24,7 +24,7 @@ const SOURCE_URL = `https://raw.githubusercontent.com/vuski/admdongkor/${SOURCE_
 
 const RAW_PATH = join(ROOT, "data/raw", `HangJeongDong_${SOURCE_VERSION}.geojson`);
 const OUT_DIR = join(ROOT, "public/data");
-const BOUNDARY_PATH = join(OUT_DIR, "regions.geojson");
+const BOUNDARY_PATH = join(OUT_DIR, "boundaries.json");
 const LIST_PATH = join(OUT_DIR, "regions.json");
 
 // 경계 간소화 비율. 낮을수록 가볍지만 해안선이 거칠어진다.

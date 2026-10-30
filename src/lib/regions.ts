@@ -7,7 +7,7 @@ import type { Origin } from "./room/types";
 export type Region = RegionLite;
 
 export const REGIONS_URL = "/data/regions.json";
-export const BOUNDARIES_URL = "/data/regions.geojson";
+export const BOUNDARIES_URL = "/data/boundaries.json";
 
 let regionsPromise: Promise<Region[]> | null = null;
 

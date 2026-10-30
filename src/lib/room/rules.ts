@@ -8,6 +8,8 @@ export const ORIGIN_NAME_MAX_LENGTH = 40;
 // 접속 표시: 이 간격으로 하트비트를 보내고, 이 시간 안에 신호가 있었으면 접속 중으로 본다.
 export const HEARTBEAT_INTERVAL_MS = 30_000;
 export const ONLINE_WINDOW_MS = 75_000;
+// 방장이 이만큼 접속 신호가 없으면 다른 참여자가 방장을 넘겨받을 수 있다.
+export const HOST_AWAY_MS = 120_000;
 
 // 헷갈리기 쉬운 문자(0/O, 1/I/L)는 뺐다.
 const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";

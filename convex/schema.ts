@@ -47,7 +47,40 @@ export default defineSchema({
     origin: v.optional(origin),
     // 기준 라운드에서 지금 보고 있는 질문
     currentRoundId: v.optional(v.id("rounds")),
+    // 투표로 정한 최종 여행지
+    result: v.optional(
+      v.object({
+        regionCode: v.string(),
+        votes: v.number(),
+        // 동점이라 무작위(룰렛)로 정했는지
+        tie: v.boolean(),
+        // 후보가 하나뿐이라 투표 없이 정했는지
+        unanimous: v.boolean(),
+      }),
+    ),
   }).index("by_code", ["code"]),
+
+  // 다트 한 번. 한 사람이 최대 3번 던지고, 마지막 기록이 그 사람의 후보다.
+  throws: defineTable({
+    roomId: v.id("rooms"),
+    playerId: v.id("players"),
+    attempt: v.number(),
+    lat: v.number(),
+    lng: v.number(),
+    outcome: v.union(v.literal("hit"), v.literal("sea"), v.literal("outside"), v.literal("snapped")),
+    regionCode: v.optional(v.string()),
+    // 방장이 자리를 비운 친구 대신 던졌는지
+    byHost: v.boolean(),
+  }).index("by_room", ["roomId"]),
+
+  // 최종 투표. 공개 전에는 누가 어디를 골랐는지 다른 참여자에게 보내지 않는다.
+  votes: defineTable({
+    roomId: v.id("rooms"),
+    playerId: v.id("players"),
+    regionCode: v.string(),
+  })
+    .index("by_room", ["roomId"])
+    .index("by_room_player", ["roomId", "playerId"]),
 
   // 기준 라운드의 질문 하나. 낼 때의 선택지와 기준을 그대로 저장해서, 나중에 질문 목록이 바뀌어도 기록이 유지된다.
   rounds: defineTable({
