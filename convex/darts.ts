@@ -20,8 +20,10 @@ function currentThrower(players: Doc<"players">[], throws: Doc<"throws">[]) {
 
 // 다트 던지기. 자기 차례인 사람이 던지고, 방장은 자리를 비운 친구 대신 던질 수 있다.
 export const throwDart = mutation({
-  args: { code: v.string(), token: tokenArg },
-  handler: async (ctx, { code, token }) => {
+  // expected*: 던지는 사람이 화면에서 본 차례와 시도. 그사이 차례가 넘어갔으면 거부한다.
+  // (방장의 "대신 던지기"가 늦게 도착해 다음 사람 차례를 써 버리는 것을 막는다)
+  args: { code: v.string(), token: tokenArg, expectedPlayerId: v.id("players"), expectedAttempt: v.number() },
+  handler: async (ctx, { code, token, expectedPlayerId, expectedAttempt }) => {
     const room = await requireRoom(ctx, code);
     const caller = await requirePlayer(ctx, room, token);
     if (room.phase !== "darts") throw new ConvexError("지금은 다트를 던지는 단계가 아니에요.");
@@ -34,6 +36,9 @@ export const throwDart = mutation({
 
     const remaining = await remainingRegions(ctx, room);
     const attempt = throws.filter((t) => t.playerId === thrower._id).length + 1;
+    if (thrower._id !== expectedPlayerId || attempt !== expectedAttempt) {
+      throw new ConvexError("그사이 차례가 바뀌었어요. 화면을 확인하고 다시 눌러 주세요.");
+    }
     const boundaries = boundaryIndex();
     const point = randomDartPoint(boundaries, remaining, Math.random);
     const result = resolveDart(boundaries, remaining, point, attempt);

@@ -6,6 +6,9 @@ import { distanceKm, type Point, type RegionLite } from "./filters";
 export const MAX_ATTEMPTS = 3;
 // 고른 지역을 감싸는 사각형을 이 비율만큼 넓힌 범위에 떨어진다. (경계·해안 근처에서 빗나갈 수 있게)
 const AIM_SPREAD = 0.6;
+// 이 비율의 던지기만 넓은 범위에 떨어져 빗나갈 수 있다. 나머지는 고른 지역 안에 꽂힌다.
+// (남은 땅이 여기저기 흩어져 있으면 넓은 범위가 대부분 바다·지워진 땅이라, 모든 던지기를 넓게 하면 3번 다 빗나가기 쉬웠다)
+const WILD_THROW_RATE = 0.35;
 
 export type DartOutcome =
   | "hit" // 남은 땅에 꽂힘
@@ -89,12 +92,21 @@ export function randomDartPoint(boundaries: IndexedBoundary[], remaining: Region
   let pick = random() * total;
   const target = targets.find((b) => (pick -= b.area) <= 0) ?? targets[targets.length - 1];
 
+  // 빗나갈 수 있는 던지기: 고른 지역을 감싸는 사각형을 넓힌 범위의 아무 점
   const padLat = (target.maxLat - target.minLat) * AIM_SPREAD;
   const padLng = (target.maxLng - target.minLng) * AIM_SPREAD;
-  return {
+  const loose = () => ({
     lat: target.minLat - padLat + random() * (target.maxLat - target.minLat + 2 * padLat),
     lng: target.minLng - padLng + random() * (target.maxLng - target.minLng + 2 * padLng),
-  };
+  });
+  if (random() < WILD_THROW_RATE) return loose();
+
+  // 나머지는 고른 지역 안의 점 (사각형 안에서 지역 안에 들어갈 때까지 다시 뽑는다)
+  for (let i = 0; i < 50; i++) {
+    const p = { lat: target.minLat + random() * (target.maxLat - target.minLat), lng: target.minLng + random() * (target.maxLng - target.minLng) };
+    if (regionAt([target], p) === target.code) return p;
+  }
+  return loose();
 }
 
 export type DartResult = { point: Point; outcome: DartOutcome; regionCode: string | null };

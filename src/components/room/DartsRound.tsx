@@ -33,9 +33,6 @@ export function DartsRound({ room, me, token }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const players = useMemo(() => [...room.players].sort((a, b) => a.turnOrder - b.turnOrder), [room.players]);
-  const finals = new Map(room.throws.filter(isFinal).map((t) => [t.playerId, t]));
-  const thrower = players.find((p) => !finals.has(p.id)) ?? null;
-  const attemptsUsed = thrower ? room.throws.filter((t) => t.playerId === thrower.id).length : 0;
   const nickname = (id: string) => room.players.find((p) => p.id === id)?.nickname ?? "나간 친구";
 
   // 새 다트가 들어오면 잠깐 "날아가는 중"을 보여준 뒤 결과를 공개한다. 처음 화면을 열 때 이미 있던 다트는 바로 보여준다.
@@ -54,7 +51,12 @@ export function DartsRound({ room, me, token }: Props) {
     return () => clearTimeout(timer);
   }, [flyingId]);
 
+  // 날아가는 중인 다트는 결과가 드러나지 않게 차례·후보 계산에서도 뺀다.
   const visibleThrows = room.throws.filter((t) => t.id !== flyingId);
+  const finals = new Map(visibleThrows.filter(isFinal).map((t) => [t.playerId, t]));
+  const thrower = players.find((p) => !finals.has(p.id)) ?? null;
+  const attemptsUsed = thrower ? visibleThrows.filter((t) => t.playerId === thrower.id).length : 0;
+  const throwArgs = thrower ? { code: room.code, token, expectedPlayerId: thrower.id, expectedAttempt: attemptsUsed + 1 } : null;
   const pins: MapPin[] = visibleThrows.map((t) => ({
     id: t.id,
     lat: t.lat,
@@ -126,14 +128,14 @@ export function DartsRound({ room, me, token }: Props) {
               </span>
             </p>
             {myTurn ? (
-              <Button disabled={busy || flyingId !== null} onClick={() => run(() => throwDart({ code: room.code, token }), "던지지 못했어요.")}>
+              <Button disabled={busy || flyingId !== null} onClick={() => run(() => throwDart(throwArgs!), "던지지 못했어요.")}>
                 🎯 다트 던지기
               </Button>
             ) : me.isHost ? (
               <Button
                 variant="secondary"
                 disabled={busy || flyingId !== null}
-                onClick={() => run(() => throwDart({ code: room.code, token }), "던지지 못했어요.")}
+                onClick={() => run(() => throwDart(throwArgs!), "던지지 못했어요.")}
               >
                 자리를 비웠다면 대신 던지기
               </Button>
@@ -161,8 +163,7 @@ export function DartsRound({ room, me, token }: Props) {
         <ul className="flex flex-col gap-2">
           {players.map((p) => {
             const t = finals.get(p.id);
-            const shown = t && t.id !== flyingId;
-            const region = shown && t.regionCode ? byCode.get(t.regionCode) : undefined;
+            const region = t?.regionCode ? byCode.get(t.regionCode) : undefined;
             return (
               <li key={p.id} className="flex items-baseline justify-between gap-2 text-sm">
                 <span className="font-medium">{p.nickname}</span>

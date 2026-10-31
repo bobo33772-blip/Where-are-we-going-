@@ -30,6 +30,9 @@ export function ResultView({ room, spin, onSpinDone }: { room: RoomState; spin: 
   for (const v of room.votes ?? []) counts.set(v.regionCode, (counts.get(v.regionCode) ?? 0) + 1);
   const tied = [...counts.entries()].filter(([, n]) => n === result.votes).map(([code]) => code);
 
+  if (spin && result.tie && !regions) {
+    return <p className="p-8 text-center text-muted">🎰 룰렛 준비 중…</p>;
+  }
   if (spin && result.tie && regions) {
     return (
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-4 px-4 py-5">

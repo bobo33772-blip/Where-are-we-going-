@@ -92,13 +92,23 @@ export async function drawResultCard(input: ResultCardInput): Promise<Blob> {
 
   ctx.fillStyle = COLORS.muted;
   ctx.font = `34px ${FONT}`;
-  ctx.fillText(`함께한 친구: ${input.players.join(", ")}`, WIDTH / 2, Math.max(y + 70, 1780), 960);
+  ctx.fillText(playersLine(ctx, input.players, 960), WIDTH / 2, Math.max(y + 70, 1780));
   ctx.font = `30px ${FONT}`;
   ctx.fillText(`어디로 갈까? · ${new Date().toLocaleDateString("ko-KR")}`, WIDTH / 2, 1860);
 
   return new Promise((resolve, reject) =>
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("이미지를 만들지 못했어요."))), "image/png"),
   );
+}
+
+// "함께한 친구: A, B, C" 가 한 줄에 안 들어가면 뒤쪽 이름을 "외 N명"으로 줄인다.
+function playersLine(ctx: CanvasRenderingContext2D, players: string[], maxWidth: number) {
+  for (let shown = players.length; shown > 0; shown--) {
+    const rest = players.length - shown;
+    const line = `함께한 친구: ${players.slice(0, shown).join(", ")}${rest > 0 ? ` 외 ${rest}명` : ""}`;
+    if (ctx.measureText(line).width <= maxWidth) return line;
+  }
+  return `함께한 친구 ${players.length}명`;
 }
 
 function fitFontSize(ctx: CanvasRenderingContext2D, text: string, size: number, maxWidth: number) {

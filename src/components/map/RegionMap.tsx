@@ -176,12 +176,17 @@ export default function RegionMap({
   }, [excludedCodes, loaded]);
 
   // 남은 지역이 한눈에 보이도록 지도를 맞춘다.
+  // 화면이 다시 그려질 때마다 배열이 새로 만들어져도, 좌표 내용이 같으면 지도를 다시 움직이지 않는다.
+  const focusKey = focusPoints && focusPoints.length > 0 ? focusPoints.map((p) => `${p.lng},${p.lat}`).join(";") : null;
   const firstFocusRef = useRef(true);
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !loaded || !focusPoints || focusPoints.length === 0) return;
+    if (!map || !loaded || !focusKey) return;
     const bounds = new maplibregl.LngLatBounds();
-    for (const p of focusPoints) bounds.extend([p.lng, p.lat]);
+    for (const pair of focusKey.split(";")) {
+      const [lng, lat] = pair.split(",").map(Number);
+      bounds.extend([lng, lat]);
+    }
     // 처음 그릴 때는 바로 맞추고, 그 뒤에는 지역이 지워지는 연출을 먼저 보여준 뒤 움직인다.
     if (firstFocusRef.current) {
       firstFocusRef.current = false;
@@ -190,7 +195,7 @@ export default function RegionMap({
     }
     const timer = setTimeout(() => map.fitBounds(bounds, { padding: 32, maxZoom: 9, duration: 1200 }), LEAVING_MS);
     return () => clearTimeout(timer);
-  }, [focusPoints, loaded]);
+  }, [focusKey, loaded]);
 
   useEffect(() => {
     const map = mapRef.current;
