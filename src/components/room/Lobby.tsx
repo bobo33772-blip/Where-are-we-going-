@@ -145,10 +145,10 @@ function ShareButton({ code }: { code: string }) {
 
   async function handleShare() {
     const url = `${window.location.origin}/room/${code}`;
-    const text = "어디로 갈까? 다트로 우리 여행지 정하자!";
+    const text = "야! 우리 어디가?? 다트로 우리 여행지 정하자!";
     try {
       if (navigator.share) {
-        await navigator.share({ title: "어디로 갈까?", text, url });
+        await navigator.share({ title: "야! 우리 어디가??", text, url });
         return;
       }
       await navigator.clipboard.writeText(url);

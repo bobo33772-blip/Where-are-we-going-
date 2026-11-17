@@ -13,9 +13,9 @@ export default function Home() {
       <header className="flex flex-col gap-4">
         <p className="eyebrow">친구 여행지 정하기</p>
         <h1 className="font-display text-5xl leading-[1.05]">
-          어디로
+          야! 우리
           <br />
-          갈까?
+          어디가??
         </h1>
         <p className="max-w-[30ch] text-muted">
           질문에 답할수록 지도가 줄어들어요. 남은 땅에 다트를 던져서 우리 여행지를 정해요.

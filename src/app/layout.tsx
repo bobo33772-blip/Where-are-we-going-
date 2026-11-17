@@ -9,7 +9,7 @@ const body = IBM_Plex_Sans_KR({ weight: ["400", "500", "600", "700"], subsets: [
 const mono = IBM_Plex_Mono({ weight: ["500", "600"], subsets: ["latin"], variable: "--nf-mono" });
 
 export const metadata: Metadata = {
-  title: "어디로 갈까?",
+  title: "야! 우리 어디가??",
   description: "친구들과 질문에 답하고, 줄어든 지도에 다트를 던져 여행지를 정해요.",
 };
 

@@ -164,7 +164,7 @@ function ResultCard({ input }: { input: Parameters<typeof drawResultCard>[0] }) 
   async function share() {
     if (!image) return;
     try {
-      await navigator.share({ files: [image.file], title: "어디로 갈까?", text: `우리의 다음 여행지는 ${input.regionName}!` });
+      await navigator.share({ files: [image.file], title: "야! 우리 어디가??", text: `우리의 다음 여행지는 ${input.regionName}!` });
     } catch {
       // 공유 창을 닫은 경우 등은 무시
     }

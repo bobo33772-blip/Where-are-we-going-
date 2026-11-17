@@ -1,4 +1,4 @@
-# 어디로 갈까? 🎯
+# 야! 우리 어디가??
 
 친구들과 질문에 답할수록 지도가 줄어들고, 남은 땅에 다트를 던져 여행지를 정하는 웹앱.
 설계는 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), 만든 이유와 결정 근거는 [docs/DECISIONS.md](docs/DECISIONS.md)를 참고하세요.

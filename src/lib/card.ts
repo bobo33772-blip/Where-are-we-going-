@@ -66,9 +66,9 @@ export async function drawResultCard(input: ResultCardInput): Promise<Blob> {
   };
   const date = new Date().toLocaleDateString("ko-KR");
   // 캔버스는 글꼴을 스스로 불러오지 않으므로, 쓸 글자가 든 글꼴 조각을 먼저 불러 둔다.
-  const bodyText = [input.regionPlace, input.distanceText ?? "", ...input.criteria, ...input.players, "다트로 정한 우리의 다음 여행지 함께한 친구 외 명 어디로 갈까? 우리의 여행 기준"].join(" ");
+  const bodyText = [input.regionPlace, input.distanceText ?? "", ...input.criteria, ...input.players, "다트로 정한 우리의 다음 여행지 함께한 친구 외 명 우리의 여행 기준"].join(" ");
   await Promise.all([
-    document.fonts.load(`120px ${fonts.display}`, input.regionName),
+    document.fonts.load(`120px ${fonts.display}`, `${input.regionName} 야! 우리 어디가??`),
     document.fonts.load(`40px ${fonts.body}`, bodyText),
     document.fonts.load(`600 34px ${fonts.mono}`, `${input.distanceText ?? ""} ${date}`),
   ]).catch(() => {});
@@ -128,7 +128,7 @@ export async function drawResultCard(input: ResultCardInput): Promise<Blob> {
   ctx.fillText(date, WIDTH - MARGIN, 150);
   ctx.textAlign = "left";
   ctx.font = `28px ${fonts.display}`;
-  ctx.fillText("어디로 갈까?", MARGIN, 1880);
+  ctx.fillText("야! 우리 어디가??", MARGIN, 1880);
 
   return new Promise((resolve, reject) =>
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("이미지를 만들지 못했어요."))), "image/png"),
