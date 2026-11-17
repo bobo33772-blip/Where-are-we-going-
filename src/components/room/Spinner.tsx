@@ -43,7 +43,8 @@ export function Spinner({ items, resultKey, onDone }: { items: SpinItem[]; resul
           }`}
         >
           <span className="font-bold">{item.label}</span>
-          {item.sub && <span className={`ml-2 text-sm ${i === lit ? "text-white/80" : "text-muted"}`}>{item.sub}</span>}
+          {/* 칸 글자색을 그대로 따라가게 해서, 배경이 바뀌는 순간에도 설명이 배경에 묻히지 않게 한다 */}
+          {item.sub && <span className="ml-2 text-sm opacity-70">{item.sub}</span>}
         </li>
       ))}
     </ul>
