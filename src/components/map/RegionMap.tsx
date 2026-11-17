@@ -1,11 +1,14 @@
 "use client";
 
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useRef, useState } from "react";
 import type { Point } from "@/lib/game/filters";
 import { BOUNDARIES_URL } from "@/lib/regions";
 import type { Origin } from "@/lib/room/types";
+
+// MapLibre 6부터는 지도 계산을 맡는 워커 파일의 주소를 직접 알려줘야 한다. (공식 안내의 Next.js 방식)
+maplibregl.setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).toString());
 
 // 독도까지 들어오도록 잡은 대한민국 범위
 const KOREA_BOUNDS: maplibregl.LngLatBoundsLike = [
