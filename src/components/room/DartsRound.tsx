@@ -5,7 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import { LazyRegionMap } from "@/components/map/LazyRegionMap";
 import type { MapPin } from "@/components/map/RegionMap";
-import { Button, ErrorText } from "@/components/ui";
+import { ArrowRightIcon, DartIcon } from "@/components/icons";
+import { Button, Count, ErrorText, MapFrame, ScreenHeader } from "@/components/ui";
 import { MAX_ATTEMPTS } from "@/lib/game/darts";
 import { regionPlace, useRegionLookup } from "@/lib/game/useRegionLookup";
 import { useRemaining } from "@/lib/game/useRemaining";
@@ -61,7 +62,7 @@ export function DartsRound({ room, me, token }: Props) {
     id: t.id,
     lat: t.lat,
     lng: t.lng,
-    label: isFinal(t) ? `🎯 ${nickname(t.playerId)}` : t.outcome === "sea" ? "💦" : "🚫",
+    label: isFinal(t) ? nickname(t.playerId) : t.outcome === "sea" ? "바다" : "기준 밖",
     tone: isFinal(t) ? "hit" : "miss",
   }));
   const latestPin = latest ? (pins.find((p) => p.id === latest.id) ?? null) : null;
@@ -81,23 +82,14 @@ export function DartsRound({ room, me, token }: Props) {
   const myTurn = thrower?.id === me.id;
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 px-4 py-5">
-      <header className="flex items-end justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted">
-            다트 던지기 · {finals.size}/{players.length}명 던짐
-          </p>
-          <h1 className="text-xl font-bold">🎯 다트 라운드</h1>
-        </div>
-        <p className="text-right text-sm">
-          남은 곳
-          <br />
-          <span className="text-2xl font-bold text-accent">{remaining ? remaining.regions.length.toLocaleString() : "…"}</span>
-          <span className="text-muted">곳</span>
-        </p>
-      </header>
+    <main className="gutter mx-auto flex w-full max-w-md flex-1 flex-col gap-5 py-6">
+      <ScreenHeader
+        step={`다트 던지기 · ${finals.size}/${players.length}명 던짐`}
+        title="다트 라운드"
+        aside={<Count label="남은 곳" value={remaining ? remaining.regions.length.toLocaleString() : "…"} unit="곳" />}
+      />
 
-      <div className="h-72 overflow-hidden rounded-2xl border border-line">
+      <MapFrame className="h-72">
         <LazyRegionMap
           origin={room.origin}
           excludedCodes={remaining?.excluded ?? null}
@@ -105,7 +97,7 @@ export function DartsRound({ room, me, token }: Props) {
           pins={pins}
           flyToPin={latestPin}
         />
-      </div>
+      </MapFrame>
       <ErrorText>{regionsError}</ErrorText>
 
       {latest && (
@@ -118,18 +110,20 @@ export function DartsRound({ room, me, token }: Props) {
         />
       )}
 
-      <section className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5">
+      {/* 지금 해야 할 동작. 이 화면에서 유일하게 카드로 띄운다 */}
+      <section className="flex flex-col gap-3 rounded-md border border-line bg-surface p-5 shadow-sm">
         {thrower ? (
           <>
-            <p className="text-center font-semibold">
-              {myTurn ? "내 차례예요!" : `${thrower.nickname}님 차례예요`}
-              <span className="ml-1 text-sm font-normal text-muted">
-                ({attemptsUsed + 1}/{MAX_ATTEMPTS}번째 기회)
+            <p className="flex items-baseline justify-between gap-2">
+              <span className="font-semibold">{myTurn ? "내 차례예요" : `${thrower.nickname}님 차례예요`}</span>
+              <span className="text-sm tabular-nums text-muted">
+                기회 {attemptsUsed + 1}/{MAX_ATTEMPTS}
               </span>
             </p>
             {myTurn ? (
-              <Button disabled={busy || flyingId !== null} onClick={() => run(() => throwDart(throwArgs!), "던지지 못했어요.")}>
-                🎯 다트 던지기
+              <Button variant="accent" disabled={busy || flyingId !== null} onClick={() => run(() => throwDart(throwArgs!), "던지지 못했어요.")}>
+                <DartIcon className="h-5 w-5" />
+                다트 던지기
               </Button>
             ) : me.isHost ? (
               <Button
@@ -140,39 +134,40 @@ export function DartsRound({ room, me, token }: Props) {
                 자리를 비웠다면 대신 던지기
               </Button>
             ) : (
-              <p className="text-center text-sm text-muted">{thrower.nickname}님이 던지길 기다리는 중…</p>
+              <p className="text-sm text-muted">{thrower.nickname}님이 던지길 기다리는 중이에요.</p>
             )}
           </>
         ) : (
           <>
-            <p className="text-center font-semibold">모두 던졌어요! 이제 투표로 정해요.</p>
+            <p className="font-semibold">모두 던졌어요. 이제 투표로 정해요.</p>
             {me.isHost ? (
               <Button disabled={busy || flyingId !== null} onClick={() => run(() => startVote({ code: room.code, token }), "투표를 시작하지 못했어요.")}>
-                🗳️ 투표하러 가기
+                투표하러 가기
+                <ArrowRightIcon className="h-4 w-4" />
               </Button>
             ) : (
-              <p className="text-center text-sm text-muted">방장이 투표를 시작하면 이어져요.</p>
+              <p className="text-sm text-muted">방장이 투표를 시작하면 이어져요.</p>
             )}
           </>
         )}
         <ErrorText>{error}</ErrorText>
       </section>
 
-      <section className="flex flex-col gap-2 rounded-2xl border border-line bg-card p-5">
-        <h2 className="font-semibold">후보</h2>
-        <ul className="flex flex-col gap-2">
+      <section className="flex flex-col gap-2">
+        <h2 className="text-sm font-semibold">후보</h2>
+        <ul className="divide-y divide-line border-y border-line">
           {players.map((p) => {
             const t = finals.get(p.id);
             const region = t?.regionCode ? byCode.get(t.regionCode) : undefined;
             return (
-              <li key={p.id} className="flex items-baseline justify-between gap-2 text-sm">
-                <span className="font-medium">{p.nickname}</span>
-                <span className={region ? "text-right" : "text-muted"}>
+              <li key={p.id} className="flex min-h-12 items-baseline justify-between gap-3 py-2.5 text-sm">
+                <span className="shrink-0 font-medium">{p.nickname}</span>
+                <span className={`min-w-0 text-right ${region ? "" : "text-muted"}`}>
                   {region ? (
                     <>
                       <span className="font-semibold">{region.name}</span>{" "}
                       <span className="text-muted">{regionPlace(region)}</span>
-                      {t?.byHost && <span className="text-muted"> (대신 던짐)</span>}
+                      {t?.byHost && <span className="block text-xs text-muted">방장이 대신 던짐</span>}
                     </>
                   ) : p.id === thrower?.id ? (
                     "던지는 중"
@@ -204,28 +199,31 @@ function LatestThrow({
 }) {
   if (flying) {
     return (
-      <p className="animate-pulse rounded-2xl bg-card p-4 text-center text-lg font-bold" aria-live="polite">
-        {nickname}님의 다트가 날아가는 중… 🎯💨
-      </p>
+      <div className="flex items-center gap-3 border-l-2 border-accent py-1 pl-4" aria-live="polite">
+        <DartIcon className="h-6 w-6 animate-pulse text-accent" />
+        <p className="font-semibold">{nickname}님의 다트가 날아가는 중…</p>
+      </div>
     );
   }
 
   const left = MAX_ATTEMPTS - t.attempt;
   const message =
     t.outcome === "hit"
-      ? `🎯 ${nickname}님의 다트가 꽂혔어요!`
+      ? `${nickname}님의 다트가 꽂혔어요`
       : t.outcome === "snapped"
         ? `${MAX_ATTEMPTS}번 다 빗나가서 가장 가까운 남은 땅으로 옮겼어요`
         : t.outcome === "sea"
-          ? `💦 풍덩! 바다에 빠졌어요. 기회 ${left}번 남았어요`
-          : `🚫 우리 기준 밖의 땅이에요. 기회 ${left}번 남았어요`;
+          ? `바다에 빠졌어요. 기회가 ${left}번 남았어요`
+          : `우리 기준 밖의 땅이에요. 기회가 ${left}번 남았어요`;
+  const missed = t.outcome === "sea" || t.outcome === "outside";
 
   return (
-    <div className="rounded-2xl bg-card p-4 text-center" aria-live="polite">
-      <p className="font-semibold">{message}</p>
+    <div className={`border-l-2 py-1 pl-4 ${missed ? "border-line" : "border-accent"}`} aria-live="polite">
+      <p className={`text-sm ${missed ? "text-muted" : "font-semibold"}`}>{message}</p>
       {region && (
-        <p className="mt-1 text-2xl font-bold">
-          {region.name} <span className="text-base font-normal text-muted">{regionPlace(region)}</span>
+        <p className="mt-1">
+          <span className="font-display text-3xl">{region.name}</span>
+          <span className="ml-2 text-sm text-muted">{regionPlace(region)}</span>
         </p>
       )}
     </div>

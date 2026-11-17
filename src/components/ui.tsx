@@ -1,17 +1,20 @@
-import type { ButtonHTMLAttributes, InputHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
 
+// 주 버튼은 잉크색 바탕, 강조 버튼(다트 던지기처럼 한 화면에 하나뿐인 동작)은 핀 색 바탕, 보조 버튼은 테두리만.
 export function Button({
   variant = "primary",
   className = "",
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" }) {
-  const styles =
-    variant === "primary"
-      ? "bg-accent text-white hover:bg-accent-strong disabled:opacity-50"
-      : "border border-line bg-card hover:border-accent disabled:opacity-50";
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "accent" | "secondary" | "ghost" }) {
+  const styles = {
+    primary: "bg-ink text-paper hover:opacity-90",
+    accent: "bg-accent text-accent-ink hover:opacity-90",
+    secondary: "border border-line bg-surface text-ink hover:border-ink",
+    ghost: "text-muted hover:text-ink",
+  }[variant];
   return (
     <button
-      className={`h-12 rounded-xl px-4 font-semibold transition-colors disabled:cursor-not-allowed ${styles} ${className}`}
+      className={`inline-flex h-12 items-center justify-center gap-2 rounded-md px-5 font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ${styles} ${className}`}
       {...props}
     />
   );
@@ -20,7 +23,7 @@ export function Button({
 export function TextInput({ className = "", ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`h-12 w-full rounded-xl border border-line bg-card px-4 outline-none focus:border-accent ${className}`}
+      className={`h-12 w-full rounded-md border border-line bg-surface px-4 text-ink outline-none placeholder:text-muted focus:border-ink ${className}`}
       {...props}
     />
   );
@@ -29,8 +32,50 @@ export function TextInput({ className = "", ...props }: InputHTMLAttributes<HTML
 export function ErrorText({ children }: { children: string | null }) {
   if (!children) return null;
   return (
-    <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+    <p role="alert" className="text-sm text-danger">
       {children}
     </p>
   );
+}
+
+// 화면 맨 위: 단계 이름(작은 글씨)과 큰 제목, 오른쪽에 숫자 하나
+export function ScreenHeader({ step, title, aside }: { step: string; title: ReactNode; aside?: ReactNode }) {
+  return (
+    <header className="flex items-end justify-between gap-4">
+      <div className="min-w-0">
+        <p className="eyebrow">{step}</p>
+        <h1 className="mt-1 font-display text-3xl leading-tight">{title}</h1>
+      </div>
+      {aside}
+    </header>
+  );
+}
+
+// "남은 곳 1,234곳" 같은 숫자 표시
+export function Count({ label, value, unit }: { label: string; value: string; unit: string }) {
+  return (
+    <p className="shrink-0 text-right">
+      <span className="eyebrow block">{label}</span>
+      <span className="text-3xl font-bold tabular-nums tracking-tight text-accent">{value}</span>
+      <span className="ml-0.5 text-sm text-muted">{unit}</span>
+    </p>
+  );
+}
+
+// 참여자 이름표. 고른 사람은 채워진 모양으로 보인다.
+export function NameTag({ name, done }: { name: string; done: boolean }) {
+  return (
+    <li
+      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs ${
+        done ? "border-ink bg-ink text-paper" : "border-line text-muted"
+      }`}
+    >
+      {name}
+    </li>
+  );
+}
+
+// 지도 틀. 화면마다 같은 모양으로 쓴다.
+export function MapFrame({ children, className = "h-64" }: { children: ReactNode; className?: string }) {
+  return <div className={`overflow-hidden rounded-md border border-line ${className}`}>{children}</div>;
 }

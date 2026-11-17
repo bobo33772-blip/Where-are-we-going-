@@ -5,7 +5,8 @@ import { useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { LazyRegionMap } from "@/components/map/LazyRegionMap";
-import { Button, ErrorText } from "@/components/ui";
+import { ArrowRightIcon, CheckIcon, DartIcon } from "@/components/icons";
+import { Button, Count, ErrorText, MapFrame, NameTag, ScreenHeader } from "@/components/ui";
 import { MAX_QUESTIONS, type OptionKey } from "@/lib/game/questions";
 import { useRemaining } from "@/lib/game/useRemaining";
 import { useRegions } from "@/lib/regions";
@@ -40,23 +41,16 @@ export function CriteriaRound({ room, me, token }: Props) {
   const revealedCount = room.rounds.filter((r) => r.status === "revealed").length;
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 px-4 py-5">
-      <header className="flex items-end justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted">기준 정하기 · 정한 기준 {revealedCount}/{MAX_QUESTIONS}</p>
-          <h1 className="text-xl font-bold">밸런스 게임</h1>
-        </div>
-        <p className="text-right text-sm">
-          남은 곳
-          <br />
-          <span className="text-2xl font-bold text-accent">{remaining ? remaining.regions.length.toLocaleString() : "…"}</span>
-          <span className="text-muted">곳</span>
-        </p>
-      </header>
+    <main className="gutter mx-auto flex w-full max-w-md flex-1 flex-col gap-5 py-6">
+      <ScreenHeader
+        step={`기준 정하기 · ${revealedCount}/${MAX_QUESTIONS}`}
+        title="밸런스 게임"
+        aside={<Count label="남은 곳" value={remaining ? remaining.regions.length.toLocaleString() : "…"} unit="곳" />}
+      />
 
-      <div className="h-60 overflow-hidden rounded-2xl border border-line">
+      <MapFrame className="h-60">
         <LazyRegionMap origin={room.origin} excludedCodes={remaining?.excluded ?? null} focusPoints={remaining?.focus ?? null} />
-      </div>
+      </MapFrame>
       <ErrorText>{regionsError}</ErrorText>
 
       {current?.status === "open" && (
@@ -75,22 +69,9 @@ export function CriteriaRound({ room, me, token }: Props) {
   );
 }
 
-function QuestionCard({
-  room,
-  me,
-  token,
-  round,
-  myChoice,
-}: Props & { round: RoundView; myChoice: OptionKey | null }) {
-  const answer = useMutation(api.game.answer);
-  const reveal = useMutation(api.game.reveal);
-  const skip = useMutation(api.game.skip);
+function useRun() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-
-  const roundId = round.id as Id<"rounds">;
-  const answered = new Set<string>(round.answeredPlayerIds);
-
   async function run(action: () => Promise<unknown>, fallback: string) {
     setBusy(true);
     setError(null);
@@ -102,11 +83,29 @@ function QuestionCard({
       setBusy(false);
     }
   }
+  return { error, busy, run };
+}
+
+function QuestionCard({
+  room,
+  me,
+  token,
+  round,
+  myChoice,
+}: Props & { round: RoundView; myChoice: OptionKey | null }) {
+  const answer = useMutation(api.game.answer);
+  const reveal = useMutation(api.game.reveal);
+  const skip = useMutation(api.game.skip);
+  const { error, busy, run } = useRun();
+
+  const roundId = round.id as Id<"rounds">;
+  const answered = new Set<string>(round.answeredPlayerIds);
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-line bg-card p-5">
-      <h2 className="text-center text-lg font-bold">{round.title}</h2>
+    <section className="flex flex-col gap-4 rounded-md border border-line bg-surface p-5 shadow-sm">
+      <h2 className="font-display text-2xl leading-snug">{round.title}</h2>
 
+      {/* A와 B는 실제 두 선택지라 글자로 구분한다 */}
       <div className="grid grid-cols-2 gap-3">
         {round.options.map((o) => {
           const selected = myChoice === o.key;
@@ -117,35 +116,34 @@ function QuestionCard({
               disabled={busy}
               aria-pressed={selected}
               onClick={() => run(() => answer({ code: room.code, token, roundId, choice: o.key }), "선택하지 못했어요.")}
-              className={`flex flex-col items-center gap-1 rounded-2xl border-2 p-4 text-center transition-colors disabled:opacity-60 ${
-                selected ? "border-accent bg-accent/10" : "border-line hover:border-accent"
+              className={`flex min-w-0 flex-col gap-2 rounded-md border-2 p-4 text-left transition-colors disabled:opacity-60 ${
+                selected ? "border-accent bg-accent-soft" : "border-line hover:border-ink"
               }`}
             >
-              <span className="text-4xl" aria-hidden>
-                {o.emoji}
+              <span className="flex items-center justify-between">
+                <span className={`font-mono text-sm font-semibold ${selected ? "text-accent" : "text-muted"}`}>{o.key}</span>
+                {selected && <CheckIcon className="h-4 w-4 text-accent" />}
               </span>
-              <span className="font-bold">{o.label}</span>
+              <span className="text-lg font-bold leading-snug">{o.label}</span>
               <span className="text-xs text-muted">{o.detail}</span>
-              <span className="mt-1 text-xs font-semibold text-accent">→ {o.remaining.toLocaleString()}곳 남아요</span>
+              <span className="mt-auto border-t border-line pt-2 text-xs text-muted">
+                남는 곳 <span className="font-semibold text-ink tabular-nums">{o.remaining.toLocaleString()}</span>
+              </span>
             </button>
           );
         })}
       </div>
 
       <div className="flex flex-col gap-2">
-        <p className="text-center text-sm text-muted">
-          {myChoice ? "골랐어요! 공개 전까지는 바꿀 수 있어요." : "둘 중 하나를 골라 주세요."} ({answered.size}/{room.players.length}명
-          골랐어요)
+        <p className="text-sm text-muted">
+          {myChoice ? "골랐어요. 결과가 나오기 전까지는 바꿀 수 있어요." : "둘 중 하나를 골라 주세요."}
+          <span className="ml-1 font-semibold tabular-nums">
+            {answered.size}/{room.players.length}
+          </span>
         </p>
-        <ul className="flex flex-wrap justify-center gap-1.5">
+        <ul className="flex flex-wrap gap-1.5" aria-label="고른 사람">
           {room.players.map((p) => (
-            <li
-              key={p.id}
-              className={`rounded-full px-2.5 py-1 text-xs ${answered.has(p.id) ? "bg-accent text-white" : "bg-background text-muted"}`}
-            >
-              {answered.has(p.id) ? "✓ " : ""}
-              {p.nickname}
-            </li>
+            <NameTag key={p.id} name={p.nickname} done={answered.has(p.id)} />
           ))}
         </ul>
       </div>
@@ -153,7 +151,7 @@ function QuestionCard({
       <ErrorText>{error}</ErrorText>
 
       {me.isHost && (
-        <div className="flex gap-2">
+        <div className="flex gap-2 border-t border-line pt-4">
           <Button
             variant="secondary"
             className="flex-1"
@@ -162,11 +160,7 @@ function QuestionCard({
           >
             지금 공개하기
           </Button>
-          <Button
-            variant="secondary"
-            disabled={busy}
-            onClick={() => run(() => skip({ code: room.code, token, roundId }), "건너뛰지 못했어요.")}
-          >
+          <Button variant="ghost" disabled={busy} onClick={() => run(() => skip({ code: room.code, token, roundId }), "건너뛰지 못했어요.")}>
             건너뛰기
           </Button>
         </div>
@@ -178,56 +172,39 @@ function QuestionCard({
 function ResultCard({ room, me, token, round }: Props & { round: RoundView }) {
   const next = useMutation(api.game.next);
   const finish = useMutation(api.game.finishCriteria);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const { error, busy, run } = useRun();
 
   const result = round.result!;
   const winner = round.options.find((o) => o.key === result.choice)!;
   const nickname = (id: string) => room.players.find((p) => p.id === id)?.nickname ?? "나간 친구";
-
-  async function run(action: () => Promise<unknown>, fallback: string) {
-    setBusy(true);
-    setError(null);
-    try {
-      await action();
-    } catch (err) {
-      setError(errorMessage(err, fallback));
-    } finally {
-      setBusy(false);
-    }
-  }
+  const revealedCount = room.rounds.filter((r) => r.status === "revealed").length;
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-line bg-card p-5">
-      <div className="text-center">
-        <p className="text-sm text-muted">{round.title}</p>
-        <p className="mt-1 text-2xl font-bold">
-          {winner.emoji} {winner.label}!
-        </p>
-        <p className="text-sm text-muted">
+    <section className="flex flex-col gap-4 rounded-md border border-line bg-surface p-5 shadow-sm">
+      <div>
+        <p className="eyebrow">{round.title}</p>
+        <p className="mt-1 font-display text-3xl leading-tight">{winner.label}</p>
+        <p className="mt-1 text-sm text-muted">
           {result.tie ? `${result.votesA} 대 ${result.votesB} 동점이라 룰렛으로 정했어요` : `${result.votesA} 대 ${result.votesB}`}
           {" · "}
-          {winner.remaining.toLocaleString()}곳이 남았어요
+          <span className="font-semibold text-ink tabular-nums">{winner.remaining.toLocaleString()}</span>곳이 남았어요
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         {round.options.map((o) => {
           const voters = (round.votes ?? []).filter((v) => v.choice === o.key);
+          const won = o.key === result.choice;
           return (
-            <div
-              key={o.key}
-              className={`rounded-xl border-2 p-3 ${o.key === result.choice ? "border-accent" : "border-line opacity-70"}`}
-            >
-              <p className="text-sm font-semibold">
-                {o.emoji} {o.label}
+            <div key={o.key} className={`flex min-w-0 flex-col gap-2 rounded-md border-2 p-3 ${won ? "border-accent" : "border-line opacity-60"}`}>
+              <p className="flex items-baseline gap-2 text-sm font-semibold">
+                <span className={`font-mono ${won ? "text-accent" : "text-muted"}`}>{o.key}</span>
+                {o.label}
               </p>
-              <ul className="mt-1 flex flex-wrap gap-1">
+              <ul className="flex flex-wrap gap-1">
                 {voters.length === 0 && <li className="text-xs text-muted">아무도 안 골랐어요</li>}
                 {voters.map((v) => (
-                  <li key={v.playerId} className="rounded-full bg-background px-2 py-0.5 text-xs">
-                    {nickname(v.playerId)}
-                  </li>
+                  <NameTag key={v.playerId} name={nickname(v.playerId)} done={won} />
                 ))}
               </ul>
             </div>
@@ -238,7 +215,7 @@ function ResultCard({ room, me, token, round }: Props & { round: RoundView }) {
       <ErrorText>{error}</ErrorText>
 
       {me.isHost ? (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 border-t border-line pt-4">
           {round.canContinue ? (
             <>
               <Button
@@ -246,26 +223,24 @@ function ResultCard({ room, me, token, round }: Props & { round: RoundView }) {
                 onClick={() => run(() => next({ code: room.code, token, roundId: round.id as Id<"rounds"> }), "다음 질문을 내지 못했어요.")}
               >
                 다음 질문
+                <ArrowRightIcon className="h-4 w-4" />
               </Button>
-              <Button variant="secondary" disabled={busy} onClick={() => run(() => finish({ code: room.code, token }), "넘어가지 못했어요.")}>
+              <Button variant="ghost" disabled={busy} onClick={() => run(() => finish({ code: room.code, token }), "넘어가지 못했어요.")}>
                 여기까지 하고 다트 던지러 가기
               </Button>
             </>
           ) : (
             <>
-              <p className="text-center text-sm text-muted">
-                {room.rounds.filter((r) => r.status === "revealed").length >= MAX_QUESTIONS
-                  ? "질문을 다 했어요!"
-                  : "더 좁힐 수 있는 질문이 없어요."}
-              </p>
-              <Button disabled={busy} onClick={() => run(() => finish({ code: room.code, token }), "넘어가지 못했어요.")}>
-                🎯 다트 던지러 가기
+              <p className="text-sm text-muted">{revealedCount >= MAX_QUESTIONS ? "질문을 다 했어요." : "더 좁힐 수 있는 질문이 없어요."}</p>
+              <Button variant="accent" disabled={busy} onClick={() => run(() => finish({ code: room.code, token }), "넘어가지 못했어요.")}>
+                <DartIcon className="h-5 w-5" />
+                다트 던지러 가기
               </Button>
             </>
           )}
         </div>
       ) : (
-        <p className="text-center text-sm text-muted">방장이 다음으로 넘기면 이어져요.</p>
+        <p className="border-t border-line pt-4 text-sm text-muted">방장이 다음으로 넘기면 이어져요.</p>
       )}
     </section>
   );
@@ -273,15 +248,16 @@ function ResultCard({ room, me, token, round }: Props & { round: RoundView }) {
 
 function NoMoreQuestions({ room, me, token }: Props) {
   const finish = useMutation(api.game.finishCriteria);
-  const [error, setError] = useState<string | null>(null);
+  const { error, busy, run } = useRun();
 
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5 text-center">
+    <section className="flex flex-col gap-3 rounded-md border border-line bg-surface p-5 shadow-sm">
       <p className="font-semibold">더 낼 수 있는 질문이 없어요.</p>
       <ErrorText>{error}</ErrorText>
       {me.isHost ? (
-        <Button onClick={() => finish({ code: room.code, token }).catch((err) => setError(errorMessage(err, "넘어가지 못했어요.")))}>
-          🎯 다트 던지러 가기
+        <Button variant="accent" disabled={busy} onClick={() => run(() => finish({ code: room.code, token }), "넘어가지 못했어요.")}>
+          <DartIcon className="h-5 w-5" />
+          다트 던지러 가기
         </Button>
       ) : (
         <p className="text-sm text-muted">방장이 다트 라운드로 넘기면 이어져요.</p>

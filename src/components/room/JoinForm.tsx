@@ -32,24 +32,21 @@ export function JoinForm({ room, onJoined }: { room: RoomState; onJoined: (sessi
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-6 px-4 py-12">
-      <header className="flex flex-col gap-2 text-center">
-        <p className="text-5xl" aria-hidden>
-          ✈️
-        </p>
-        <h1 className="text-2xl font-bold">{host ? `${host.nickname}님의 여행 방` : "여행 방"}</h1>
-        <p className="text-muted">
-          지금 {room.players.length}명 참여 중 · 방 코드 <span className="font-mono font-semibold">{room.code}</span>
-        </p>
+    <main className="gutter mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8 py-12">
+      <header className="flex flex-col gap-3">
+        <p className="eyebrow">초대받은 여행 방 · {room.code}</p>
+        <h1 className="font-display text-4xl leading-tight">{host ? `${host.nickname}님의 여행 방` : "여행 방"}</h1>
+        <p className="text-muted">지금 {room.players.length}명이 모여 있어요. 닉네임을 정하고 들어가요.</p>
       </header>
 
       {closed ? (
-        <p className="rounded-2xl border border-line bg-card p-5 text-center">
-          {room.phase !== "lobby" ? "이미 시작한 방이라 들어갈 수 없어요." : `방이 가득 찼어요. (최대 ${MAX_PLAYERS}명)`}
+        <p className="border-t border-line pt-4">
+          {room.phase !== "lobby" ? "이미 게임을 시작한 방이라 들어갈 수 없어요." : `방이 가득 찼어요. (최대 ${MAX_PLAYERS}명)`}
         </p>
       ) : (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <TextInput
+            id="join-nickname"
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
             placeholder="내 닉네임"

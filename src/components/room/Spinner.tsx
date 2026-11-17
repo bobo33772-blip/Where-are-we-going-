@@ -38,8 +38,8 @@ export function Spinner({ items, resultKey, onDone }: { items: SpinItem[]; resul
       {items.map((item, i) => (
         <li
           key={item.key}
-          className={`rounded-xl border-2 px-4 py-3 transition-colors duration-75 ${
-            i === lit ? "border-accent bg-accent text-white" : "border-line"
+          className={`rounded-md border-2 px-4 py-3 transition-colors duration-75 ${
+            i === lit ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface"
           }`}
         >
           <span className="font-bold">{item.label}</span>

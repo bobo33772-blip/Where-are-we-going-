@@ -1,50 +1,121 @@
 @import "tailwindcss";
 
+/*
+  레이아웃: 접은 지도 한 장. 화면마다 지도가 주인공이고, 그 아래 종이 위에 진행 내용이 놓인다.
+  색: 종이(회녹색 기운), 잉크(남색), 핀(코발트) 하나만 강조. 지도는 세이지 땅, 옅은 바다.
+*/
 :root {
-  --background: #fff7ed;
-  --foreground: #1c1917;
-  --card: #ffffff;
-  --muted: #78716c;
-  --line: #e7e5e4;
-  --accent: #ea580c;
-  --accent-strong: #c2410c;
-  --map-land: #fdba74;
-  --map-line: #fff7ed;
-  --map-sea: #e0f2fe;
-  --map-out: #d6d3d1;
-  --map-leaving: #ef4444;
+  --paper: #eef1ec;
+  --surface: #ffffff;
+  --ink: #16212e;
+  --muted: #5d6a70;
+  --line: #d6ddd4;
+  --accent: #1f4fe0;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3e9fc;
+  --danger: #b4321f;
+
+  --map-sea: #d5e4ea;
+  --map-land: #b5ca98;
+  --map-line: #eef1ec;
+  --map-out: #e1e4de;
+  --map-leaving: #e8a33d;
+  --map-winner: #1f4fe0;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #1c1917;
-    --foreground: #fafaf9;
-    --card: #292524;
-    --muted: #a8a29e;
-    --line: #44403c;
-    --accent: #fb923c;
-    --accent-strong: #fdba74;
-    --map-land: #c2410c;
-    --map-line: #1c1917;
-    --map-sea: #0c4a6e;
-    --map-out: #44403c;
-    --map-leaving: #f87171;
+  :root:not([data-theme="light"]) {
+    --paper: #10161d;
+    --surface: #18212b;
+    --ink: #e7ecef;
+    --muted: #93a1aa;
+    --line: #2b3641;
+    --accent: #7d9bff;
+    --accent-ink: #0d1522;
+    --accent-soft: #1d2a4a;
+    --danger: #f08a75;
+
+    --map-sea: #13293a;
+    --map-land: #3f5640;
+    --map-line: #10161d;
+    --map-out: #1d252d;
+    --map-leaving: #e8a33d;
+    --map-winner: #7d9bff;
+    color-scheme: dark;
   }
 }
 
+:root[data-theme="dark"] {
+  --paper: #10161d;
+  --surface: #18212b;
+  --ink: #e7ecef;
+  --muted: #93a1aa;
+  --line: #2b3641;
+  --accent: #7d9bff;
+  --accent-ink: #0d1522;
+  --accent-soft: #1d2a4a;
+  --danger: #f08a75;
+
+  --map-sea: #13293a;
+  --map-land: #3f5640;
+  --map-line: #10161d;
+  --map-out: #1d252d;
+  --map-leaving: #e8a33d;
+  --map-winner: #7d9bff;
+  color-scheme: dark;
+}
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-accent: var(--accent);
-  --color-accent-strong: var(--accent-strong);
-  --font-sans: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --font-display: var(--nf-display), "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-sans: var(--nf-body), "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  --font-mono: var(--nf-mono), ui-monospace, "SFMono-Regular", monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--paper);
+  color: var(--ink);
   font-family: var(--font-sans);
+  font-feature-settings: "tnum" 1;
+}
+
+h1,
+h2 {
+  text-wrap: balance;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 작은 대문자 라벨 (단계 이름 등) */
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 화면 좌우 여백. 휴대폰 옆쪽 시스템 막대도 피한다. */
+.gutter {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
 }

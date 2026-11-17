@@ -30,7 +30,6 @@ export const optionKey = v.union(v.literal("A"), v.literal("B"));
 
 const roundOption = v.object({
   key: optionKey,
-  emoji: v.string(),
   label: v.string(),
   detail: v.string(),
   filter: regionFilter,

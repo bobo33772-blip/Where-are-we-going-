@@ -3,7 +3,8 @@
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { api } from "../../../convex/_generated/api";
-import { Button, ErrorText } from "@/components/ui";
+import { CrownIcon, FlagIcon, ShareIcon } from "@/components/icons";
+import { Button, ErrorText, MapFrame } from "@/components/ui";
 import { errorMessage } from "@/lib/room/client";
 import { LazyRegionMap } from "@/components/map/LazyRegionMap";
 import { useOnlinePlayerIds } from "@/lib/room/hooks";
@@ -54,60 +55,72 @@ export function Lobby({ room, me, token }: Props) {
   const readyToStart = room.origin !== null && room.players.length >= MIN_PLAYERS_TO_START;
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-4 py-6">
-      <header className="flex items-center justify-between gap-3">
+    <main className="gutter mx-auto flex w-full max-w-md flex-1 flex-col gap-6 py-6">
+      <header className="flex items-end justify-between gap-4">
         <div>
-          <p className="text-sm text-muted">방 코드</p>
-          <p className="font-mono text-3xl font-bold tracking-[0.2em]">{room.code}</p>
+          <p className="eyebrow">대기실 · 방 코드</p>
+          <p className="mt-1 font-mono text-4xl font-semibold tracking-[0.18em]">{room.code}</p>
         </div>
         <ShareButton code={room.code} />
       </header>
 
-      <section className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5">
-        <h2 className="font-semibold">
-          참여자 <span className="text-muted">{room.players.length}/{MAX_PLAYERS}</span>
+      <section className="flex flex-col gap-2">
+        <h2 className="flex items-baseline justify-between text-sm font-semibold">
+          참여자
+          <span className="tabular-nums text-muted">
+            {room.players.length}/{MAX_PLAYERS}
+          </span>
         </h2>
-        <ul className="flex flex-col gap-2">
-          {room.players.map((p) => (
-            <li key={p.id} className="flex items-center gap-2">
-              <span
-                className={`h-2.5 w-2.5 rounded-full ${p.id === me.id || onlineIds.has(p.id) ? "bg-green-500" : "bg-line"}`}
-                aria-label={p.id === me.id || onlineIds.has(p.id) ? "접속 중" : "접속 안 함"}
-              />
-              <span className="font-medium">{p.nickname}</span>
-              {p.isHost && <span className="text-sm">👑</span>}
-              {p.id === me.id && <span className="text-sm text-muted">(나)</span>}
-              {me.isHost && p.id !== me.id && (
-                <button
-                  type="button"
-                  className="ml-auto rounded-lg px-2 py-1 text-xs text-muted hover:text-accent"
-                  onClick={() =>
-                    transferHost({ code: room.code, token, playerId: p.id }).catch((error) =>
-                      setStartError(errorMessage(error, "방장을 넘기지 못했어요.")),
-                    )
-                  }
-                >
-                  👑 방장 넘기기
-                </button>
-              )}
-            </li>
-          ))}
+        <ul className="divide-y divide-line border-y border-line">
+          {room.players.map((p) => {
+            const online = p.id === me.id || onlineIds.has(p.id);
+            return (
+              <li key={p.id} className="flex min-h-12 items-center gap-3 py-2">
+                <span
+                  className={`h-2 w-2 shrink-0 rounded-full ${online ? "bg-accent" : "bg-line"}`}
+                  aria-label={online ? "접속 중" : "접속 안 함"}
+                />
+                <span className="font-medium">{p.nickname}</span>
+                {p.id === me.id && <span className="text-xs text-muted">나</span>}
+                {p.isHost && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-semibold text-accent">
+                    <CrownIcon className="h-3.5 w-3.5" />
+                    방장
+                  </span>
+                )}
+                {me.isHost && p.id !== me.id && (
+                  <button
+                    type="button"
+                    className="ml-auto rounded-md px-2 py-1 text-xs text-muted hover:text-ink"
+                    onClick={() =>
+                      transferHost({ code: room.code, token, playerId: p.id }).catch((error) =>
+                        setStartError(errorMessage(error, "방장을 넘기지 못했어요.")),
+                      )
+                    }
+                  >
+                    방장 넘기기
+                  </button>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </section>
 
-      <section className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5">
-        <h2 className="font-semibold">출발지</h2>
+      <section className="flex flex-col gap-3">
+        <h2 className="text-sm font-semibold">출발지</h2>
         {me.isHost ? (
           <OriginPicker value={room.origin} disabled={savingOrigin} onChange={handleOriginChange} />
         ) : (
-          <p className={room.origin ? "font-medium" : "text-muted"}>
-            {room.origin ? `🚩 ${room.origin.name}` : "방장이 출발지를 정하는 중이에요."}
+          <p className={`flex items-center gap-2 ${room.origin ? "font-semibold" : "text-muted"}`}>
+            {room.origin && <FlagIcon className="h-4 w-4 text-accent" />}
+            {room.origin ? room.origin.name : "방장이 출발지를 정하는 중이에요."}
           </p>
         )}
         <ErrorText>{originError}</ErrorText>
-        <div className="h-72 overflow-hidden rounded-xl border border-line">
+        <MapFrame className="h-72">
           <LazyRegionMap origin={room.origin} />
-        </div>
+        </MapFrame>
       </section>
 
       {me.isHost ? (
@@ -117,13 +130,11 @@ export function Lobby({ room, me, token }: Props) {
           </Button>
           <ErrorText>{startError}</ErrorText>
           {!readyToStart && (
-            <p className="text-center text-sm text-muted">
-              출발지를 정하고 친구가 {MIN_PLAYERS_TO_START}명 이상 모이면 시작할 수 있어요.
-            </p>
+            <p className="text-sm text-muted">출발지를 정하고 친구가 {MIN_PLAYERS_TO_START}명 이상 모이면 시작할 수 있어요.</p>
           )}
         </div>
       ) : (
-        <p className="text-center text-sm text-muted">방장이 게임을 시작하면 바로 넘어가요.</p>
+        <p className="text-sm text-muted">방장이 게임을 시작하면 바로 넘어가요.</p>
       )}
     </main>
   );
@@ -150,7 +161,8 @@ function ShareButton({ code }: { code: string }) {
 
   return (
     <Button variant="secondary" onClick={handleShare} className="shrink-0">
-      {copied ? "링크 복사됨!" : "친구 초대"}
+      <ShareIcon className="h-4 w-4" />
+      {copied ? "링크 복사됨" : "친구 초대"}
     </Button>
   );
 }

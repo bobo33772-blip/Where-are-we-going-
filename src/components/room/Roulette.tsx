@@ -43,31 +43,29 @@ export function Roulette({ round, onDone }: { round: RoundView; onDone: () => vo
   const winner = round.options.find((o) => o.key === result)!;
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-line bg-card p-5" aria-live="polite">
-      <div className="text-center">
-        <p className="text-sm text-muted">{round.title}</p>
-        <p className="mt-1 text-xl font-bold">
-          {round.result!.votesA} 대 {round.result!.votesB} 동점! 🎰 룰렛 돌리는 중…
+    <section className="flex flex-col gap-4 rounded-md border border-line bg-surface p-5 shadow-sm" aria-live="polite">
+      <div>
+        <p className="eyebrow">{round.title}</p>
+        <p className="mt-1 font-display text-2xl leading-tight">
+          {round.result!.votesA} 대 {round.result!.votesB} 동점, 룰렛으로 정해요
         </p>
       </div>
       <div className="grid grid-cols-2 gap-3">
         {round.options.map((o) => (
           <div
             key={o.key}
-            className={`flex flex-col items-center gap-1 rounded-2xl border-2 p-4 transition-colors duration-75 ${
-              lit === o.key ? "border-accent bg-accent text-white" : "border-line"
+            className={`flex min-w-0 flex-col gap-1 rounded-md border-2 p-4 transition-colors duration-75 ${
+              lit === o.key ? "border-accent bg-accent text-accent-ink" : "border-line"
             }`}
           >
-            <span className="text-4xl" aria-hidden>
-              {o.emoji}
-            </span>
-            <span className="font-bold">{o.label}</span>
+            <span className="font-mono text-sm font-semibold opacity-70">{o.key}</span>
+            <span className="text-lg font-bold">{o.label}</span>
           </div>
         ))}
       </div>
       {finished && (
-        <p className="text-center text-lg font-bold">
-          {winner.emoji} {winner.label} 당첨!
+        <p className="text-lg">
+          결과 <span className="font-bold text-accent">{winner.label}</span>
         </p>
       )}
     </section>

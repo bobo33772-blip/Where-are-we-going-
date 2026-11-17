@@ -33,9 +33,9 @@ export type MapPin = {
 };
 
 const PIN_STYLE: Record<MapPin["tone"], string> = {
-  hit: "bg-white text-stone-900",
-  miss: "bg-stone-200/90 text-stone-500",
-  winner: "bg-red-600 text-white text-sm",
+  hit: "bg-surface text-ink border border-ink",
+  miss: "bg-surface/90 text-muted border border-line line-through",
+  winner: "bg-accent text-accent-ink text-sm",
 };
 
 type Props = {
@@ -96,7 +96,7 @@ export default function RegionMap({
               "fill-color": [
                 "case",
                 ["boolean", ["feature-state", "winner"], false],
-                cssVar("--map-leaving"),
+                cssVar("--map-winner"),
                 ["boolean", ["feature-state", "leaving"], false],
                 cssVar("--map-leaving"),
                 ["boolean", ["feature-state", "out"], false],
@@ -209,8 +209,8 @@ export default function RegionMap({
     if (!origin) return;
 
     const el = document.createElement("div");
-    el.className = "rounded-full bg-white px-2 py-1 text-xs font-bold shadow-md text-stone-900";
-    el.textContent = `🚩 ${origin.name}`;
+    el.className = "rounded-sm bg-ink px-2 py-1 text-xs font-semibold text-paper shadow-md";
+    el.textContent = `출발 · ${origin.name}`;
     markerRef.current = new maplibregl.Marker({ element: el, anchor: "bottom" })
       .setLngLat([origin.lng, origin.lat])
       .addTo(map);
@@ -235,7 +235,7 @@ export default function RegionMap({
       if (existing?.key === key) continue;
       existing?.marker.remove();
       const el = document.createElement("div");
-      el.className = `rounded-full px-2 py-0.5 text-xs font-bold shadow-md whitespace-nowrap ${PIN_STYLE[pin.tone]}`;
+      el.className = `rounded-sm px-2 py-0.5 text-xs font-semibold shadow-sm whitespace-nowrap ${PIN_STYLE[pin.tone]}`;
       el.textContent = pin.label;
       const marker = new maplibregl.Marker({ element: el, anchor: "bottom" }).setLngLat([pin.lng, pin.lat]).addTo(map);
       current.set(pin.id, { marker, key });

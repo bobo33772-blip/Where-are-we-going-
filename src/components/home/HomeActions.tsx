@@ -43,10 +43,14 @@ export function HomeActions() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <form onSubmit={handleCreate} className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5">
-        <h2 className="font-semibold">방 만들기</h2>
+    <div className="flex flex-col gap-6">
+      {/* 방 만들기가 이 화면의 주 동작이라 이것만 카드로 띄운다 */}
+      <form onSubmit={handleCreate} className="flex flex-col gap-3 rounded-md border border-line bg-surface p-5 shadow-sm">
+        <label htmlFor="create-nickname" className="font-semibold">
+          방 만들기
+        </label>
         <TextInput
+          id="create-nickname"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
           placeholder="내 닉네임"
@@ -56,29 +60,34 @@ export function HomeActions() {
         />
         <ErrorText>{createError}</ErrorText>
         <Button type="submit" disabled={creating || nickname.trim().length === 0}>
-          {creating ? "만드는 중…" : "방 만들기"}
+          {creating ? "만드는 중…" : "방 만들고 친구 부르기"}
         </Button>
       </form>
 
-      <form onSubmit={handleJoin} className="flex flex-col gap-3 rounded-2xl border border-line bg-card p-5">
-        <h2 className="font-semibold">코드로 참여하기</h2>
-        <TextInput
-          value={code}
-          onChange={(e) => {
-            setCode(e.target.value.toUpperCase());
-            setJoinError(null);
-          }}
-          placeholder="방 코드 6자리"
-          maxLength={6}
-          aria-label="방 코드"
-          autoCapitalize="characters"
-          autoComplete="off"
-          className="font-mono tracking-[0.3em] uppercase placeholder:font-sans placeholder:tracking-normal"
-        />
+      <form onSubmit={handleJoin} className="flex flex-col gap-2">
+        <label htmlFor="join-code" className="text-sm text-muted">
+          초대받았다면 방 코드로 들어가요
+        </label>
+        <div className="flex gap-2">
+          <TextInput
+            id="join-code"
+            value={code}
+            onChange={(e) => {
+              setCode(e.target.value.toUpperCase());
+              setJoinError(null);
+            }}
+            placeholder="방 코드 6자리"
+            maxLength={6}
+            aria-label="방 코드"
+            autoCapitalize="characters"
+            autoComplete="off"
+            className="font-mono tracking-[0.3em] uppercase placeholder:font-sans placeholder:tracking-normal"
+          />
+          <Button type="submit" variant="secondary" disabled={code.trim().length === 0} className="shrink-0">
+            참여
+          </Button>
+        </div>
         <ErrorText>{joinError}</ErrorText>
-        <Button type="submit" variant="secondary" disabled={code.trim().length === 0}>
-          참여하기
-        </Button>
       </form>
     </div>
   );

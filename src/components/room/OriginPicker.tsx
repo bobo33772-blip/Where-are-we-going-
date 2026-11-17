@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FlagIcon } from "@/components/icons";
 import { TextInput } from "@/components/ui";
 import { loadRegions, ORIGIN_PRESETS, searchRegions, type Region } from "@/lib/regions";
 import type { Origin } from "@/lib/room/types";
@@ -44,7 +45,7 @@ export function OriginPicker({ value, disabled, onChange }: Props) {
               onClick={() => pick(preset)}
               aria-pressed={selected}
               className={`rounded-full border px-3 py-1.5 text-sm transition-colors disabled:opacity-50 ${
-                selected ? "border-accent bg-accent text-white" : "border-line hover:border-accent"
+                selected ? "border-ink bg-ink text-paper" : "border-line bg-surface hover:border-ink"
               }`}
             >
               {preset.name}
@@ -55,6 +56,7 @@ export function OriginPicker({ value, disabled, onChange }: Props) {
 
       <div className="relative">
         <TextInput
+          id="origin-search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="동네 이름으로 찾기 (예: 연남동, 성산읍)"
@@ -62,8 +64,8 @@ export function OriginPicker({ value, disabled, onChange }: Props) {
           disabled={disabled}
         />
         {query.trim().length > 0 && (
-          <ul className="absolute inset-x-0 top-full z-10 mt-1 max-h-64 overflow-auto rounded-xl border border-line bg-card shadow-lg">
-            {loadError && <li className="px-4 py-3 text-sm text-red-600">{loadError}</li>}
+          <ul className="absolute inset-x-0 top-full z-10 mt-1 max-h-64 overflow-auto rounded-md border border-line bg-surface shadow-lg">
+            {loadError && <li className="px-4 py-3 text-sm text-danger">{loadError}</li>}
             {!loadError && !regions && <li className="px-4 py-3 text-sm text-muted">불러오는 중…</li>}
             {regions && results.length === 0 && <li className="px-4 py-3 text-sm text-muted">검색 결과가 없어요.</li>}
             {results.map((r) => (
@@ -71,7 +73,7 @@ export function OriginPicker({ value, disabled, onChange }: Props) {
                 <button
                   type="button"
                   onClick={() => pick({ name: `${r.sgg} ${r.name}`, lat: r.lat, lng: r.lng })}
-                  className="w-full px-4 py-3 text-left hover:bg-background"
+                  className="w-full px-4 py-3 text-left hover:bg-paper"
                 >
                   <span className="font-medium">{r.name}</span>
                   <span className="ml-2 text-sm text-muted">
@@ -84,7 +86,12 @@ export function OriginPicker({ value, disabled, onChange }: Props) {
         )}
       </div>
 
-      {value && <p className="text-sm">🚩 지금 출발지: <span className="font-semibold">{value.name}</span></p>}
+      {value && (
+        <p className="flex items-center gap-2 text-sm">
+          <FlagIcon className="h-4 w-4 text-accent" />
+          출발지 <span className="font-semibold">{value.name}</span>
+        </p>
+      )}
     </div>
   );
 }

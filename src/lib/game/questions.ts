@@ -12,7 +12,6 @@ export type OptionKey = "A" | "B";
 
 export type QuestionOption = {
   key: OptionKey;
-  emoji: string;
   label: string;
   detail: string;
   filter: RegionFilter;
@@ -34,9 +33,8 @@ type QuestionDef = {
 const CAPITAL_AREA = ["서울특별시", "경기도", "인천광역시"];
 const JEJU = ["제주특별자치도"];
 
-const option = (key: OptionKey, emoji: string, label: string, detail: string, filter: RegionFilter): QuestionOption => ({
+const option = (key: OptionKey, label: string, detail: string, filter: RegionFilter): QuestionOption => ({
   key,
-  emoji,
   label,
   detail,
   filter,
@@ -48,8 +46,8 @@ export const QUESTIONS: QuestionDef[] = [
     build: () => ({
       title: "당일치기 vs 1박 필수",
       options: [
-        option("A", "🚗", "당일치기 가능한 거리", "출발지에서 직선 100km 이내", { kind: "distance", maxKm: 100 }),
-        option("B", "🛏️", "자고 와야 하는 거리", "출발지에서 직선 100km 넘게", { kind: "distance", minKm: 100 }),
+        option("A", "당일치기 가능한 거리", "출발지에서 직선 100km 이내", { kind: "distance", maxKm: 100 }),
+        option("B", "자고 와야 하는 거리", "출발지에서 직선 100km 넘게", { kind: "distance", minKm: 100 }),
       ],
     }),
   },
@@ -64,8 +62,8 @@ export const QUESTIONS: QuestionDef[] = [
       return {
         title: "가까운 쪽 vs 먼 쪽",
         options: [
-          option("A", "📍", "가까운 쪽", `출발지에서 직선 ${median}km 이내`, { kind: "distance", maxKm: median }),
-          option("B", "🚀", "먼 쪽", `출발지에서 직선 ${median}km 넘게`, { kind: "distance", minKm: median }),
+          option("A", "가까운 쪽", `출발지에서 직선 ${median}km 이내`, { kind: "distance", maxKm: median }),
+          option("B", "먼 쪽", `출발지에서 직선 ${median}km 넘게`, { kind: "distance", minKm: median }),
         ],
       };
     },
@@ -75,8 +73,8 @@ export const QUESTIONS: QuestionDef[] = [
     build: () => ({
       title: "북적이는 동네 vs 한적한 시골",
       options: [
-        option("A", "🏙️", "북적이는 동네", "행정구역이 '동'인 곳", { kind: "type", types: ["동"] }),
-        option("B", "🌾", "한적한 시골", "행정구역이 '읍·면'인 곳", { kind: "type", types: ["읍", "면"] }),
+        option("A", "북적이는 동네", "행정구역이 '동'인 곳", { kind: "type", types: ["동"] }),
+        option("B", "한적한 시골", "행정구역이 '읍·면'인 곳", { kind: "type", types: ["읍", "면"] }),
       ],
     }),
   },
@@ -87,8 +85,8 @@ export const QUESTIONS: QuestionDef[] = [
       remaining.some((r) => regionType(r) === "동") ? null : {
       title: "읍내 구경 vs 찐 시골",
       options: [
-        option("A", "🏪", "읍내 구경", "행정구역이 '읍'인 곳", { kind: "type", types: ["읍"] }),
-        option("B", "🐄", "찐 시골", "행정구역이 '면'인 곳", { kind: "type", types: ["면"] }),
+        option("A", "읍내 구경", "행정구역이 '읍'인 곳", { kind: "type", types: ["읍"] }),
+        option("B", "찐 시골", "행정구역이 '면'인 곳", { kind: "type", types: ["면"] }),
       ],
     },
   },
@@ -97,8 +95,8 @@ export const QUESTIONS: QuestionDef[] = [
     build: () => ({
       title: "해 뜨는 쪽 vs 해 지는 쪽",
       options: [
-        option("A", "🌅", "해 뜨는 동쪽", "출발지보다 동쪽", { kind: "direction", side: "east" }),
-        option("B", "🌇", "해 지는 서쪽", "출발지보다 서쪽", { kind: "direction", side: "west" }),
+        option("A", "해 뜨는 동쪽", "출발지보다 동쪽", { kind: "direction", side: "east" }),
+        option("B", "해 지는 서쪽", "출발지보다 서쪽", { kind: "direction", side: "west" }),
       ],
     }),
   },
@@ -107,8 +105,8 @@ export const QUESTIONS: QuestionDef[] = [
     build: () => ({
       title: "위로 갈까 vs 아래로 갈까",
       options: [
-        option("A", "⬆️", "위로 (북쪽)", "출발지보다 북쪽", { kind: "direction", side: "north" }),
-        option("B", "⬇️", "아래로 (남쪽)", "출발지보다 남쪽", { kind: "direction", side: "south" }),
+        option("A", "위로 (북쪽)", "출발지보다 북쪽", { kind: "direction", side: "north" }),
+        option("B", "아래로 (남쪽)", "출발지보다 남쪽", { kind: "direction", side: "south" }),
       ],
     }),
   },
@@ -117,8 +115,8 @@ export const QUESTIONS: QuestionDef[] = [
     build: () => ({
       title: "수도권 vs 비수도권",
       options: [
-        option("A", "🚇", "수도권", "서울·경기·인천", { kind: "sido", include: CAPITAL_AREA }),
-        option("B", "🏞️", "비수도권", "서울·경기·인천 말고", { kind: "sido", exclude: CAPITAL_AREA }),
+        option("A", "수도권", "서울·경기·인천", { kind: "sido", include: CAPITAL_AREA }),
+        option("B", "비수도권", "서울·경기·인천 말고", { kind: "sido", exclude: CAPITAL_AREA }),
       ],
     }),
   },
@@ -127,8 +125,8 @@ export const QUESTIONS: QuestionDef[] = [
     build: () => ({
       title: "제주도 vs 육지",
       options: [
-        option("A", "🍊", "제주도", "제주특별자치도", { kind: "sido", include: JEJU }),
-        option("B", "⛰️", "육지", "제주 말고", { kind: "sido", exclude: JEJU }),
+        option("A", "제주도", "제주특별자치도", { kind: "sido", include: JEJU }),
+        option("B", "육지", "제주 말고", { kind: "sido", exclude: JEJU }),
       ],
     }),
   },
