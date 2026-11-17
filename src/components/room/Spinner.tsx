@@ -38,13 +38,13 @@ export function Spinner({ items, resultKey, onDone }: { items: SpinItem[]; resul
       {items.map((item, i) => (
         <li
           key={item.key}
-          className={`rounded-md border-2 px-4 py-3 transition-colors duration-75 ${
+          className={`flex flex-col items-center rounded-md border-2 px-4 py-3 text-center transition-colors duration-75 ${
             i === lit ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface"
           }`}
         >
           <span className="font-bold">{item.label}</span>
           {/* 칸 글자색을 그대로 따라가게 해서, 배경이 바뀌는 순간에도 설명이 배경에 묻히지 않게 한다 */}
-          {item.sub && <span className="ml-2 text-sm opacity-70">{item.sub}</span>}
+          {item.sub && <span className="text-sm opacity-70">{item.sub}</span>}
         </li>
       ))}
     </ul>

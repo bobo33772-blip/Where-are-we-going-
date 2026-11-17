@@ -46,7 +46,7 @@ export function HomeActions() {
     <div className="flex flex-col gap-6">
       {/* 방 만들기가 이 화면의 주 동작이라 이것만 카드로 띄운다 */}
       <form onSubmit={handleCreate} className="flex flex-col gap-3 rounded-md border border-line bg-surface p-5 shadow-sm">
-        <label htmlFor="create-nickname" className="font-semibold">
+        <label htmlFor="create-nickname" className="text-center font-semibold">
           방 만들기
         </label>
         <TextInput
@@ -65,7 +65,7 @@ export function HomeActions() {
       </form>
 
       <form onSubmit={handleJoin} className="flex flex-col gap-2">
-        <label htmlFor="join-code" className="text-sm text-muted">
+        <label htmlFor="join-code" className="text-center text-sm text-muted">
           초대받았다면 방 코드로 들어가요
         </label>
         <div className="flex gap-2">

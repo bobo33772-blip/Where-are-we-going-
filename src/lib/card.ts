@@ -82,23 +82,25 @@ export async function drawResultCard(input: ResultCardInput): Promise<Blob> {
 
   ctx.fillStyle = COLORS.paper;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
-  ctx.textAlign = "left";
+  // 휴대폰에서 보는 카드라 가운데 정렬
+  const CENTER = WIDTH / 2;
+  ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
 
   ctx.fillStyle = COLORS.muted;
   ctx.font = `600 34px ${fonts.body}`;
-  ctx.fillText("다트로 정한 우리의 다음 여행지", MARGIN, 150);
+  ctx.fillText("다트로 정한 우리의 다음 여행지", CENTER, 150);
 
   ctx.fillStyle = COLORS.ink;
   ctx.font = `${fitFontSize(ctx, input.regionName, 170, WIDTH - MARGIN * 2, fonts.display)}px ${fonts.display}`;
-  ctx.fillText(input.regionName, MARGIN, 320);
+  ctx.fillText(input.regionName, CENTER, 320);
 
   ctx.font = `500 46px ${fonts.body}`;
-  ctx.fillText(input.regionPlace, MARGIN, 400);
+  ctx.fillText(input.regionPlace, CENTER, 400);
   if (input.distanceText) {
     ctx.fillStyle = COLORS.accent;
     ctx.font = `600 36px ${fonts.body}`;
-    ctx.fillText(input.distanceText, MARGIN, 460);
+    ctx.fillText(input.distanceText, CENTER, 460);
   }
 
   drawMap(ctx, features, input, { x: MARGIN, y: 510, width: WIDTH - MARGIN * 2, height: 900 });
@@ -108,7 +110,7 @@ export async function drawResultCard(input: ResultCardInput): Promise<Blob> {
   if (input.criteria.length > 0) {
     ctx.fillStyle = COLORS.muted;
     ctx.font = `600 30px ${fonts.body}`;
-    ctx.fillText("우리의 여행 기준", MARGIN, y);
+    ctx.fillText("우리의 여행 기준", CENTER, y);
     y = drawChips(ctx, input.criteria, y + 28, fonts.body);
   }
 
@@ -121,14 +123,12 @@ export async function drawResultCard(input: ResultCardInput): Promise<Blob> {
   ctx.stroke();
   ctx.fillStyle = COLORS.ink;
   ctx.font = `500 32px ${fonts.body}`;
-  ctx.fillText(playersLine(ctx, input.players, WIDTH - MARGIN * 2), MARGIN, 1830);
+  ctx.fillText(playersLine(ctx, input.players, WIDTH - MARGIN * 2), CENTER, 1830);
   ctx.fillStyle = COLORS.muted;
-  ctx.font = `500 28px ${fonts.mono}`;
-  ctx.textAlign = "right";
-  ctx.fillText(date, WIDTH - MARGIN, 150);
-  ctx.textAlign = "left";
   ctx.font = `28px ${fonts.display}`;
-  ctx.fillText("야! 우리 어디가??", MARGIN, 1880);
+  ctx.fillText("야! 우리 어디가??", CENTER, 1880);
+  ctx.font = `500 26px ${fonts.mono}`;
+  ctx.fillText(date, CENTER, 100);
 
   return new Promise((resolve, reject) =>
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("이미지를 만들지 못했어요."))), "image/png"),
@@ -216,7 +216,7 @@ function drawChips(ctx: CanvasRenderingContext2D, labels: string[], top: number,
   const height = 64;
   const maxWidth = WIDTH - MARGIN * 2;
 
-  // 줄 단위로 나눠 왼쪽부터 채운다
+  // 줄 단위로 나눠 가운데 정렬
   const rows: { label: string; width: number }[][] = [[]];
   let rowWidth = 0;
   for (const label of labels) {
@@ -231,7 +231,8 @@ function drawChips(ctx: CanvasRenderingContext2D, labels: string[], top: number,
 
   let y = top;
   for (const row of rows) {
-    let x = MARGIN;
+    const total = row.reduce((sum, c) => sum + c.width, 0) + gap * (row.length - 1);
+    let x = (WIDTH - total) / 2;
     for (const chip of row) {
       ctx.fillStyle = COLORS.surface;
       ctx.strokeStyle = COLORS.line;
@@ -247,6 +248,5 @@ function drawChips(ctx: CanvasRenderingContext2D, labels: string[], top: number,
     }
     y += height + gap;
   }
-  ctx.textAlign = "left";
   return y;
 }

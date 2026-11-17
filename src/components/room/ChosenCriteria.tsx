@@ -9,9 +9,9 @@ export function ChosenCriteria({ rounds, hideRoundId = null }: { rounds: RoundVi
   if (chosen.length === 0) return null;
 
   return (
-    <section className="flex flex-col gap-2">
+    <section className="flex flex-col items-center gap-2">
       <h2 className="text-sm font-semibold">우리의 여행 기준</h2>
-      <ul className="flex flex-wrap gap-2">
+      <ul className="flex flex-wrap justify-center gap-2">
         {chosen.map(({ id, option }) => (
           <li key={id} className="rounded-sm border border-line bg-surface px-2.5 py-1 text-sm">
             {option.label}

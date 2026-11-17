@@ -33,14 +33,14 @@ export function JoinForm({ room, onJoined }: { room: RoomState; onJoined: (sessi
 
   return (
     <main className="gutter mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-8 py-12">
-      <header className="flex flex-col gap-3">
+      <header className="flex flex-col items-center gap-3 text-center">
         <p className="eyebrow">초대받은 여행 방 · {room.code}</p>
         <h1 className="font-display text-4xl leading-tight">{host ? `${host.nickname}님의 여행 방` : "여행 방"}</h1>
         <p className="text-muted">지금 {room.players.length}명이 모여 있어요. 닉네임을 정하고 들어가요.</p>
       </header>
 
       {closed ? (
-        <p className="border-t border-line pt-4">
+        <p className="border-t border-line pt-4 text-center">
           {room.phase !== "lobby" ? "이미 게임을 시작한 방이라 들어갈 수 없어요." : `방이 가득 찼어요. (최대 ${MAX_PLAYERS}명)`}
         </p>
       ) : (

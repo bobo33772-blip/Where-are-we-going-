@@ -82,11 +82,11 @@ export function VoteRound({ room, me, token }: Props) {
               disabled={busy}
               aria-pressed={selected}
               onClick={() => run(() => castVote({ code: room.code, token, regionCode: c.regionCode }), "투표하지 못했어요.")}
-              className={`flex flex-col gap-1 rounded-md border-2 bg-surface p-4 text-left transition-colors disabled:opacity-60 ${
+              className={`flex flex-col items-center gap-1 rounded-md border-2 bg-surface p-4 text-center transition-colors disabled:opacity-60 ${
                 selected ? "border-accent" : "border-line hover:border-ink"
               }`}
             >
-              <span className="flex items-baseline justify-between gap-2">
+              <span className="flex flex-col items-center gap-1">
                 <span className="font-display text-2xl">{r ? r.name : "…"}</span>
                 {selected && (
                   <span className="inline-flex items-center gap-1 text-sm font-semibold text-accent">
@@ -95,7 +95,7 @@ export function VoteRound({ room, me, token }: Props) {
                 )}
               </span>
               {r && <span className="text-sm text-muted">{regionPlace(r)}</span>}
-              <span className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted">
+              <span className="mt-1 flex flex-wrap justify-center gap-x-3 text-xs text-muted">
                 <span>{c.playerIds.map(nickname).join(", ")}의 다트</span>
                 {r && room.origin && <span className="tabular-nums">직선 {Math.round(distanceKm(room.origin, r))}km</span>}
               </span>
@@ -104,11 +104,11 @@ export function VoteRound({ room, me, token }: Props) {
         })}
       </section>
 
-      <section className="flex flex-col gap-3 border-t border-line pt-4">
+      <section className="flex flex-col items-center gap-3 border-t border-line pt-4 text-center">
         <p className="text-sm text-muted">
           {myVote ? "투표했어요. 결과가 나오기 전까지는 바꿀 수 있어요." : "가고 싶은 곳을 하나 골라 주세요."}
         </p>
-        <ul className="flex flex-wrap gap-1.5" aria-label="투표한 사람">
+        <ul className="flex flex-wrap justify-center gap-1.5" aria-label="투표한 사람">
           {room.players.map((p) => (
             <NameTag key={p.id} name={p.nickname} done={voted.has(p.id)} />
           ))}
@@ -117,6 +117,7 @@ export function VoteRound({ room, me, token }: Props) {
         {me.isHost && (
           <Button
             variant="secondary"
+            className="w-full"
             disabled={busy || voted.size === 0}
             onClick={() => run(() => revealVotes({ code: room.code, token }), "결과를 공개하지 못했어요.")}
           >

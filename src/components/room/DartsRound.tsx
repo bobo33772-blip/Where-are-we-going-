@@ -114,7 +114,7 @@ export function DartsRound({ room, me, token }: Props) {
       <section className="flex flex-col gap-3 rounded-md border border-line bg-surface p-5 shadow-sm">
         {thrower ? (
           <>
-            <p className="flex items-baseline justify-between gap-2">
+            <p className="flex flex-col items-center gap-0.5 text-center">
               <span className="font-semibold">{myTurn ? "내 차례예요" : `${thrower.nickname}님 차례예요`}</span>
               <span className="text-sm tabular-nums text-muted">
                 기회 {attemptsUsed + 1}/{MAX_ATTEMPTS}
@@ -134,19 +134,19 @@ export function DartsRound({ room, me, token }: Props) {
                 자리를 비웠다면 대신 던지기
               </Button>
             ) : (
-              <p className="text-sm text-muted">{thrower.nickname}님이 던지길 기다리는 중이에요.</p>
+              <p className="text-center text-sm text-muted">{thrower.nickname}님이 던지길 기다리는 중이에요.</p>
             )}
           </>
         ) : (
           <>
-            <p className="font-semibold">모두 던졌어요. 이제 투표로 정해요.</p>
+            <p className="text-center font-semibold">모두 던졌어요. 이제 투표로 정해요.</p>
             {me.isHost ? (
               <Button disabled={busy || flyingId !== null} onClick={() => run(() => startVote({ code: room.code, token }), "투표를 시작하지 못했어요.")}>
                 투표하러 가기
                 <ArrowRightIcon className="h-4 w-4" />
               </Button>
             ) : (
-              <p className="text-sm text-muted">방장이 투표를 시작하면 이어져요.</p>
+              <p className="text-center text-sm text-muted">방장이 투표를 시작하면 이어져요.</p>
             )}
           </>
         )}
@@ -154,7 +154,7 @@ export function DartsRound({ room, me, token }: Props) {
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold">후보</h2>
+        <h2 className="text-center text-sm font-semibold">후보</h2>
         <ul className="divide-y divide-line border-y border-line">
           {players.map((p) => {
             const t = finals.get(p.id);
@@ -199,7 +199,7 @@ function LatestThrow({
 }) {
   if (flying) {
     return (
-      <div className="flex items-center gap-3 border-l-2 border-accent py-1 pl-4" aria-live="polite">
+      <div className="flex flex-col items-center gap-2 border-t-2 border-accent pt-3 text-center" aria-live="polite">
         <DartIcon className="h-6 w-6 animate-pulse text-accent" />
         <p className="font-semibold">{nickname}님의 다트가 날아가는 중…</p>
       </div>
@@ -218,12 +218,12 @@ function LatestThrow({
   const missed = t.outcome === "sea" || t.outcome === "outside";
 
   return (
-    <div className={`border-l-2 py-1 pl-4 ${missed ? "border-line" : "border-accent"}`} aria-live="polite">
+    <div className={`border-t-2 pt-3 text-center ${missed ? "border-line" : "border-accent"}`} aria-live="polite">
       <p className={`text-sm ${missed ? "text-muted" : "font-semibold"}`}>{message}</p>
       {region && (
-        <p className="mt-1">
+        <p className="mt-1 flex flex-col items-center">
           <span className="font-display text-3xl">{region.name}</span>
-          <span className="ml-2 text-sm text-muted">{regionPlace(region)}</span>
+          <span className="text-sm text-muted">{regionPlace(region)}</span>
         </p>
       )}
     </div>

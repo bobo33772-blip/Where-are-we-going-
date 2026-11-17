@@ -38,14 +38,12 @@ export function ErrorText({ children }: { children: string | null }) {
   );
 }
 
-// 화면 맨 위: 단계 이름(작은 글씨)과 큰 제목, 오른쪽에 숫자 하나
+// 화면 맨 위: 단계 이름(작은 글씨), 큰 제목, 그 아래 숫자 하나. 휴대폰에서 보기 편하게 가운데 정렬
 export function ScreenHeader({ step, title, aside }: { step: string; title: ReactNode; aside?: ReactNode }) {
   return (
-    <header className="flex items-end justify-between gap-4">
-      <div className="min-w-0">
-        <p className="eyebrow">{step}</p>
-        <h1 className="mt-1 font-display text-3xl leading-tight">{title}</h1>
-      </div>
+    <header className="flex flex-col items-center gap-2 text-center">
+      <p className="eyebrow">{step}</p>
+      <h1 className="font-display text-3xl leading-tight">{title}</h1>
       {aside}
     </header>
   );
@@ -54,10 +52,10 @@ export function ScreenHeader({ step, title, aside }: { step: string; title: Reac
 // "남은 곳 1,234곳" 같은 숫자 표시
 export function Count({ label, value, unit }: { label: string; value: string; unit: string }) {
   return (
-    <p className="shrink-0 text-right">
-      <span className="eyebrow block">{label}</span>
+    <p className="flex items-baseline justify-center gap-1.5">
+      <span className="text-sm text-muted">{label}</span>
       <span className="text-3xl font-bold tabular-nums tracking-tight text-accent">{value}</span>
-      <span className="ml-0.5 text-sm text-muted">{unit}</span>
+      <span className="text-sm text-muted">{unit}</span>
     </p>
   );
 }

@@ -37,7 +37,7 @@ export function ResultView({ room, spin, onSpinDone }: { room: RoomState; spin: 
   if (spin && result.tie && regions) {
     return (
       <main className="gutter mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-5 py-6">
-        <div>
+        <div className="text-center">
           <p className="eyebrow">최종 투표</p>
           <h1 className="mt-1 font-display text-3xl leading-tight">{result.votes}표씩 동점, 룰렛으로 정해요</h1>
         </div>
@@ -60,7 +60,7 @@ export function ResultView({ room, spin, onSpinDone }: { room: RoomState; spin: 
 
   return (
     <main className="gutter mx-auto flex w-full max-w-md flex-1 flex-col gap-6 py-6">
-      <header>
+      <header className="flex flex-col items-center text-center">
         <p className="eyebrow">우리의 다음 여행지</p>
         <h1 className="mt-2 font-display text-6xl leading-none">{winner?.name ?? "…"}</h1>
         {winner && <p className="mt-2 text-lg">{regionPlace(winner)}</p>}
@@ -107,7 +107,7 @@ export function ResultView({ room, spin, onSpinDone }: { room: RoomState; spin: 
 
       {!result.unanimous && (
         <section className="flex flex-col gap-2">
-          <h2 className="text-sm font-semibold">투표 결과</h2>
+          <h2 className="text-center text-sm font-semibold">투표 결과</h2>
           <ul className="divide-y divide-line border-y border-line text-sm">
             {candidatesOf(room).map((c) => {
               const r = byCode.get(c.regionCode);
@@ -129,7 +129,7 @@ export function ResultView({ room, spin, onSpinDone }: { room: RoomState; spin: 
 
       <ChosenCriteria rounds={room.rounds} />
 
-      <Link href="/" className="text-sm text-muted underline underline-offset-4 hover:text-ink">
+      <Link href="/" className="self-center text-sm text-muted underline underline-offset-4 hover:text-ink">
         새 게임 하기
       </Link>
     </main>
@@ -174,7 +174,7 @@ function ResultCard({ input }: { input: Parameters<typeof drawResultCard>[0] }) 
 
   return (
     <section className="flex flex-col gap-3 rounded-md border border-line bg-surface p-5 shadow-sm">
-      <div>
+      <div className="text-center">
         <h2 className="font-semibold">결과 카드</h2>
         <p className="text-sm text-muted">릴스·스토리 크기(9:16) 이미지로 만들어요.</p>
       </div>

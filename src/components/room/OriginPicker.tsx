@@ -34,7 +34,7 @@ export function OriginPicker({ value, disabled, onChange }: Props) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap justify-center gap-2">
         {ORIGIN_PRESETS.map((preset) => {
           const selected = value?.name === preset.name;
           return (
@@ -87,7 +87,7 @@ export function OriginPicker({ value, disabled, onChange }: Props) {
       </div>
 
       {value && (
-        <p className="flex items-center gap-2 text-sm">
+        <p className="flex items-center justify-center gap-2 text-sm">
           <FlagIcon className="h-4 w-4 text-accent" />
           출발지 <span className="font-semibold">{value.name}</span>
         </p>

@@ -10,14 +10,14 @@ const STEPS = [
 export default function Home() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-10 gutter py-12">
-      <header className="flex flex-col gap-4">
+      <header className="flex flex-col items-center gap-4 text-center">
         <p className="eyebrow">친구 여행지 정하기</p>
         <h1 className="font-display text-5xl leading-[1.05]">
           야! 우리
           <br />
           어디가??
         </h1>
-        <p className="max-w-[30ch] text-muted">
+        <p className="max-w-[28ch] text-muted">
           질문에 답할수록 지도가 줄어들어요. 남은 땅에 다트를 던져서 우리 여행지를 정해요.
         </p>
       </header>
@@ -27,12 +27,10 @@ export default function Home() {
       {/* 한 판의 순서. 실제 진행 순서라 번호를 붙인다. */}
       <ol className="flex flex-col border-t border-line">
         {STEPS.map(([title, text], i) => (
-          <li key={title} className="grid grid-cols-[2rem_1fr] gap-x-2 border-b border-line py-3 text-sm">
-            <span className="font-mono text-muted">{String(i + 1).padStart(2, "0")}</span>
-            <span>
-              <span className="font-semibold">{title}</span>
-              <span className="ml-2 text-muted">{text}</span>
-            </span>
+          <li key={title} className="flex flex-col items-center gap-0.5 border-b border-line py-3 text-center text-sm">
+            <span className="font-mono text-xs text-muted">{String(i + 1).padStart(2, "0")}</span>
+            <span className="font-semibold">{title}</span>
+            <span className="text-muted">{text}</span>
           </li>
         ))}
       </ol>

@@ -44,7 +44,7 @@ export function Roulette({ round, onDone }: { round: RoundView; onDone: () => vo
 
   return (
     <section className="flex flex-col gap-4 rounded-md border border-line bg-surface p-5 shadow-sm" aria-live="polite">
-      <div>
+      <div className="text-center">
         <p className="eyebrow">{round.title}</p>
         <p className="mt-1 font-display text-2xl leading-tight">
           {round.result!.votesA} 대 {round.result!.votesB} 동점, 룰렛으로 정해요
@@ -54,7 +54,7 @@ export function Roulette({ round, onDone }: { round: RoundView; onDone: () => vo
         {round.options.map((o) => (
           <div
             key={o.key}
-            className={`flex min-w-0 flex-col gap-1 rounded-md border-2 p-4 transition-colors duration-75 ${
+            className={`flex min-w-0 flex-col items-center gap-1 rounded-md border-2 p-4 text-center transition-colors duration-75 ${
               lit === o.key ? "border-accent bg-accent text-accent-ink" : "border-line"
             }`}
           >
@@ -64,7 +64,7 @@ export function Roulette({ round, onDone }: { round: RoundView; onDone: () => vo
         ))}
       </div>
       {finished && (
-        <p className="text-lg">
+        <p className="text-center text-lg">
           결과 <span className="font-bold text-accent">{winner.label}</span>
         </p>
       )}

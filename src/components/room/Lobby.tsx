@@ -56,11 +56,9 @@ export function Lobby({ room, me, token }: Props) {
 
   return (
     <main className="gutter mx-auto flex w-full max-w-md flex-1 flex-col gap-6 py-6">
-      <header className="flex items-end justify-between gap-4">
-        <div>
-          <p className="eyebrow">대기실 · 방 코드</p>
-          <p className="mt-1 font-mono text-4xl font-semibold tracking-[0.18em]">{room.code}</p>
-        </div>
+      <header className="flex flex-col items-center gap-3 text-center">
+        <p className="eyebrow">대기실 · 방 코드</p>
+        <p className="font-mono text-4xl font-semibold tracking-[0.18em]">{room.code}</p>
         <ShareButton code={room.code} />
       </header>
 
@@ -108,11 +106,11 @@ export function Lobby({ room, me, token }: Props) {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold">출발지</h2>
+        <h2 className="text-center text-sm font-semibold">출발지</h2>
         {me.isHost ? (
           <OriginPicker value={room.origin} disabled={savingOrigin} onChange={handleOriginChange} />
         ) : (
-          <p className={`flex items-center gap-2 ${room.origin ? "font-semibold" : "text-muted"}`}>
+          <p className={`flex items-center justify-center gap-2 ${room.origin ? "font-semibold" : "text-muted"}`}>
             {room.origin && <FlagIcon className="h-4 w-4 text-accent" />}
             {room.origin ? room.origin.name : "방장이 출발지를 정하는 중이에요."}
           </p>
@@ -130,11 +128,11 @@ export function Lobby({ room, me, token }: Props) {
           </Button>
           <ErrorText>{startError}</ErrorText>
           {!readyToStart && (
-            <p className="text-sm text-muted">출발지를 정하고 친구가 {MIN_PLAYERS_TO_START}명 이상 모이면 시작할 수 있어요.</p>
+            <p className="text-center text-sm text-muted">출발지를 정하고 친구가 {MIN_PLAYERS_TO_START}명 이상 모이면 시작할 수 있어요.</p>
           )}
         </div>
       ) : (
-        <p className="text-sm text-muted">방장이 게임을 시작하면 바로 넘어가요.</p>
+        <p className="text-center text-sm text-muted">방장이 게임을 시작하면 바로 넘어가요.</p>
       )}
     </main>
   );

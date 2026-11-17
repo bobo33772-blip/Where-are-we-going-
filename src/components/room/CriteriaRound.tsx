@@ -103,7 +103,7 @@ function QuestionCard({
 
   return (
     <section className="flex flex-col gap-4 rounded-md border border-line bg-surface p-5 shadow-sm">
-      <h2 className="font-display text-2xl leading-snug">{round.title}</h2>
+      <h2 className="text-center font-display text-2xl leading-snug">{round.title}</h2>
 
       {/* A와 B는 실제 두 선택지라 글자로 구분한다 */}
       <div className="grid grid-cols-2 gap-3">
@@ -116,17 +116,17 @@ function QuestionCard({
               disabled={busy}
               aria-pressed={selected}
               onClick={() => run(() => answer({ code: room.code, token, roundId, choice: o.key }), "선택하지 못했어요.")}
-              className={`flex min-w-0 flex-col gap-2 rounded-md border-2 p-4 text-left transition-colors disabled:opacity-60 ${
+              className={`flex min-w-0 flex-col items-center gap-2 rounded-md border-2 p-4 text-center transition-colors disabled:opacity-60 ${
                 selected ? "border-accent bg-accent-soft" : "border-line hover:border-ink"
               }`}
             >
-              <span className="flex items-center justify-between">
+              <span className="flex items-center gap-1">
                 <span className={`font-mono text-sm font-semibold ${selected ? "text-accent" : "text-muted"}`}>{o.key}</span>
                 {selected && <CheckIcon className="h-4 w-4 text-accent" />}
               </span>
               <span className="text-lg font-bold leading-snug">{o.label}</span>
               <span className="text-xs text-muted">{o.detail}</span>
-              <span className="mt-auto border-t border-line pt-2 text-xs text-muted">
+              <span className="mt-auto w-full border-t border-line pt-2 text-xs text-muted">
                 남는 곳 <span className="font-semibold text-ink tabular-nums">{o.remaining.toLocaleString()}</span>
               </span>
             </button>
@@ -134,14 +134,14 @@ function QuestionCard({
         })}
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col items-center gap-2 text-center">
         <p className="text-sm text-muted">
           {myChoice ? "골랐어요. 결과가 나오기 전까지는 바꿀 수 있어요." : "둘 중 하나를 골라 주세요."}
           <span className="ml-1 font-semibold tabular-nums">
             {answered.size}/{room.players.length}
           </span>
         </p>
-        <ul className="flex flex-wrap gap-1.5" aria-label="고른 사람">
+        <ul className="flex flex-wrap justify-center gap-1.5" aria-label="고른 사람">
           {room.players.map((p) => (
             <NameTag key={p.id} name={p.nickname} done={answered.has(p.id)} />
           ))}
@@ -181,7 +181,7 @@ function ResultCard({ room, me, token, round }: Props & { round: RoundView }) {
 
   return (
     <section className="flex flex-col gap-4 rounded-md border border-line bg-surface p-5 shadow-sm">
-      <div>
+      <div className="text-center">
         <p className="eyebrow">{round.title}</p>
         <p className="mt-1 font-display text-3xl leading-tight">{winner.label}</p>
         <p className="mt-1 text-sm text-muted">
@@ -196,12 +196,12 @@ function ResultCard({ room, me, token, round }: Props & { round: RoundView }) {
           const voters = (round.votes ?? []).filter((v) => v.choice === o.key);
           const won = o.key === result.choice;
           return (
-            <div key={o.key} className={`flex min-w-0 flex-col gap-2 rounded-md border-2 p-3 ${won ? "border-accent" : "border-line opacity-60"}`}>
-              <p className="flex items-baseline gap-2 text-sm font-semibold">
+            <div key={o.key} className={`flex min-w-0 flex-col items-center gap-2 rounded-md border-2 p-3 text-center ${won ? "border-accent" : "border-line opacity-60"}`}>
+              <p className="flex flex-col items-center gap-0.5 text-sm font-semibold">
                 <span className={`font-mono ${won ? "text-accent" : "text-muted"}`}>{o.key}</span>
                 {o.label}
               </p>
-              <ul className="flex flex-wrap gap-1">
+              <ul className="flex flex-wrap justify-center gap-1">
                 {voters.length === 0 && <li className="text-xs text-muted">아무도 안 골랐어요</li>}
                 {voters.map((v) => (
                   <NameTag key={v.playerId} name={nickname(v.playerId)} done={won} />
@@ -231,7 +231,7 @@ function ResultCard({ room, me, token, round }: Props & { round: RoundView }) {
             </>
           ) : (
             <>
-              <p className="text-sm text-muted">{revealedCount >= MAX_QUESTIONS ? "질문을 다 했어요." : "더 좁힐 수 있는 질문이 없어요."}</p>
+              <p className="text-center text-sm text-muted">{revealedCount >= MAX_QUESTIONS ? "질문을 다 했어요." : "더 좁힐 수 있는 질문이 없어요."}</p>
               <Button variant="accent" disabled={busy} onClick={() => run(() => finish({ code: room.code, token }), "넘어가지 못했어요.")}>
                 <DartIcon className="h-5 w-5" />
                 다트 던지러 가기
@@ -240,7 +240,7 @@ function ResultCard({ room, me, token, round }: Props & { round: RoundView }) {
           )}
         </div>
       ) : (
-        <p className="border-t border-line pt-4 text-sm text-muted">방장이 다음으로 넘기면 이어져요.</p>
+        <p className="border-t border-line pt-4 text-center text-sm text-muted">방장이 다음으로 넘기면 이어져요.</p>
       )}
     </section>
   );
@@ -251,7 +251,7 @@ function NoMoreQuestions({ room, me, token }: Props) {
   const { error, busy, run } = useRun();
 
   return (
-    <section className="flex flex-col gap-3 rounded-md border border-line bg-surface p-5 shadow-sm">
+    <section className="flex flex-col gap-3 rounded-md border border-line bg-surface p-5 text-center shadow-sm">
       <p className="font-semibold">더 낼 수 있는 질문이 없어요.</p>
       <ErrorText>{error}</ErrorText>
       {me.isHost ? (
