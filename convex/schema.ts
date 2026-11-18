@@ -70,6 +70,8 @@ export default defineSchema({
     regionCode: v.optional(v.string()),
     // 방장이 자리를 비운 친구 대신 던졌는지
     byHost: v.boolean(),
+    // 던진 세기(0~1). 날아가는 연출에만 쓰고, 꽂히는 위치에는 영향이 없다.
+    power: v.optional(v.number()),
   }).index("by_room", ["roomId"]),
 
   // 최종 투표. 공개 전에는 누가 어디를 골랐는지 다른 참여자에게 보내지 않는다.

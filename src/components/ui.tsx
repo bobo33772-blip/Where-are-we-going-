@@ -73,7 +73,7 @@ export function NameTag({ name, done }: { name: string; done: boolean }) {
   );
 }
 
-// 지도 틀. 화면마다 같은 모양으로 쓴다.
+// 지도 틀. 화면마다 같은 모양으로 쓴다. 다트 연출처럼 지도 위에 얹는 것은 이 틀을 기준으로 자리를 잡는다.
 export function MapFrame({ children, className = "h-64" }: { children: ReactNode; className?: string }) {
-  return <div className={`overflow-hidden rounded-md border border-line ${className}`}>{children}</div>;
+  return <div className={`relative overflow-hidden rounded-md border border-line ${className}`}>{children}</div>;
 }

@@ -22,8 +22,15 @@ function currentThrower(players: Doc<"players">[], throws: Doc<"throws">[]) {
 export const throwDart = mutation({
   // expected*: 던지는 사람이 화면에서 본 차례와 시도. 그사이 차례가 넘어갔으면 거부한다.
   // (방장의 "대신 던지기"가 늦게 도착해 다음 사람 차례를 써 버리는 것을 막는다)
-  args: { code: v.string(), token: tokenArg, expectedPlayerId: v.id("players"), expectedAttempt: v.number() },
-  handler: async (ctx, { code, token, expectedPlayerId, expectedAttempt }) => {
+  // power: 던진 세기(0~1). 모두의 화면에서 같은 세기로 날아가게 하는 연출용이며, 꽂히는 위치는 서버가 무작위로 정한다.
+  args: {
+    code: v.string(),
+    token: tokenArg,
+    expectedPlayerId: v.id("players"),
+    expectedAttempt: v.number(),
+    power: v.optional(v.number()),
+  },
+  handler: async (ctx, { code, token, expectedPlayerId, expectedAttempt, power }) => {
     const room = await requireRoom(ctx, code);
     const caller = await requirePlayer(ctx, room, token);
     if (room.phase !== "darts") throw new ConvexError("지금은 다트를 던지는 단계가 아니에요.");
@@ -52,6 +59,7 @@ export const throwDart = mutation({
       outcome: result.outcome,
       regionCode: result.regionCode ?? undefined,
       byHost,
+      power: power === undefined || !Number.isFinite(power) ? undefined : Math.min(1, Math.max(0, power)),
     });
     return { outcome: result.outcome, regionCode: result.regionCode };
   },

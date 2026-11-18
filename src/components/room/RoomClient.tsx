@@ -6,6 +6,7 @@ import { useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import { useHeartbeat, usePlayerSession } from "@/lib/room/hooks";
 import { normalizeRoomCode } from "@/lib/room/rules";
+import { useAudioUnlock } from "@/lib/sfx";
 import { CriteriaRound } from "./CriteriaRound";
 import { DartsRound } from "./DartsRound";
 import { HostAwayBanner } from "./HostAwayBanner";
@@ -27,6 +28,8 @@ function Room({ code }: { code: string }) {
   const me = session && room ? room.players.find((p) => p.id === session.playerId) : undefined;
   // 어느 단계에 있든 접속 표시를 보낸다.
   useHeartbeat(code, me && session ? session.token : null);
+  // 브라우저는 화면을 한 번 누른 뒤에만 소리를 낼 수 있어서, 다트 라운드 전에 아무 데나 누를 때 미리 켜 둔다.
+  useAudioUnlock();
 
   // 투표 → 결과로 넘어가는 순간을 이 화면에서 봤을 때만 동점 룰렛을 돌린다. (새로고침하면 결과를 바로 보여준다)
   const [seenPhase, setSeenPhase] = useState<string | null>(null);

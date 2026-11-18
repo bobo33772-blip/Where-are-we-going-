@@ -32,6 +32,15 @@ export type MapPin = {
   tone: "hit" | "miss" | "winner";
 };
 
+// 지도를 옮겨 갈 곳. 같은 id면 다시 움직이지 않는다.
+export type FlyTarget = {
+  id: string;
+  lat: number;
+  lng: number;
+  // 다트가 날아가는 시간과 맞춰서, 다트가 꽂히는 순간 그 자리가 지도 한가운데에 오게 한다.
+  durationMs?: number;
+};
+
 const PIN_STYLE: Record<MapPin["tone"], string> = {
   hit: "bg-surface text-ink border border-ink",
   miss: "bg-surface/90 text-muted border border-line line-through",
@@ -46,8 +55,8 @@ type Props = {
   focusPoints?: Point[] | null;
   // 다트 같은 표시
   pins?: MapPin[];
-  // 이 표시로 지도를 이동한다. (방금 던진 다트)
-  flyToPin?: MapPin | null;
+  // 이 자리로 지도를 이동한다. (방금 던진 다트)
+  flyTo?: FlyTarget | null;
   // 강조할 지역 (최종 여행지)
   highlightCode?: string | null;
 };
@@ -59,7 +68,7 @@ export default function RegionMap({
   excludedCodes = null,
   focusPoints = null,
   pins = [],
-  flyToPin = null,
+  flyTo = null,
   highlightCode = null,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -251,14 +260,15 @@ export default function RegionMap({
   }, []);
 
   // 방금 던진 다트로 이동
-  const flyId = flyToPin?.id ?? null;
-  const flyLat = flyToPin?.lat;
-  const flyLng = flyToPin?.lng;
+  const flyId = flyTo?.id ?? null;
+  const flyLat = flyTo?.lat;
+  const flyLng = flyTo?.lng;
+  const flyDuration = flyTo?.durationMs ?? 1400;
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !loaded || flyId === null || flyLat === undefined || flyLng === undefined) return;
-    map.flyTo({ center: [flyLng, flyLat], zoom: Math.min(Math.max(map.getZoom(), 6.5), 8), duration: 1400 });
-  }, [flyId, flyLat, flyLng, loaded]);
+    map.flyTo({ center: [flyLng, flyLat], zoom: Math.min(Math.max(map.getZoom(), 6.5), 8), duration: flyDuration });
+  }, [flyId, flyLat, flyLng, flyDuration, loaded]);
 
   // 최종 여행지 강조
   useEffect(() => {

@@ -56,6 +56,7 @@ export const get = query({
         outcome: t.outcome,
         regionCode: t.regionCode ?? null,
         byHost: t.byHost,
+        power: t.power ?? null,
       })),
       // 누가 어디를 골랐는지는 결과가 나온 뒤에만 보낸다.
       votedPlayerIds: votes.map((v) => v.playerId),

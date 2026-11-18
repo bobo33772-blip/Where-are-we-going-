@@ -21,6 +21,7 @@
   --map-out: #e1e4de;
   --map-leaving: #e8a33d;
   --map-winner: #1f4fe0;
+  --map-ripple: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -41,6 +42,7 @@
     --map-out: #1d252d;
     --map-leaving: #e8a33d;
     --map-winner: #7d9bff;
+    --map-ripple: #8fb4c9;
     color-scheme: dark;
   }
 }
@@ -62,6 +64,7 @@
   --map-out: #1d252d;
   --map-leaving: #e8a33d;
   --map-winner: #7d9bff;
+  --map-ripple: #8fb4c9;
   color-scheme: dark;
 }
 
@@ -110,6 +113,7 @@ h2 {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
@@ -118,4 +122,248 @@ h2 {
 .gutter {
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/*
+  다트 연출. 모든 참여자가 같은 세기로 같은 시간 동안 본다.
+  다트 그림은 위쪽 끝이 다트 끝이라, 그 점(transform-origin: 50% 0)을 꽂히는 자리(지도 한가운데)에 맞춘다.
+*/
+.dart-flyer {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: 50% 0;
+  filter: drop-shadow(0 6px 5px rgb(0 0 0 / 0.25));
+}
+.dart-flyer.is-flying {
+  animation-name: dart-fly;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  animation-fill-mode: both;
+}
+.dart-flyer.is-hit {
+  animation: dart-wobble 620ms ease-out both;
+}
+.dart-flyer.is-sea {
+  animation: dart-sink 650ms ease-in both;
+}
+.dart-flyer.is-outside {
+  animation: dart-bounce 650ms cubic-bezier(0.3, 0.6, 0.4, 1) both;
+}
+
+/* 지도 아래 던지는 자리의 다트 그 자리·크기에서 출발해, 살짝 솟았다가 멀어지며(작아지며) 한가운데에 꽂힌다 */
+@keyframes dart-fly {
+  0% {
+    transform: translate(-50%, 52px) scale(1.25) rotate(0deg);
+    opacity: 1;
+  }
+  70% {
+    transform: translate(-50%, -22px) scale(1) rotate(4deg);
+  }
+  100% {
+    transform: translate(-50%, 0) scale(0.85) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* 꽂힘: 끝을 축으로 부르르 떨다 멈춘다 */
+@keyframes dart-wobble {
+  0% {
+    transform: translate(-50%, 0) scale(0.85) rotate(0deg);
+  }
+  18% {
+    transform: translate(-50%, 0) scale(0.85) rotate(8deg);
+  }
+  38% {
+    transform: translate(-50%, 0) scale(0.85) rotate(-6deg);
+  }
+  58% {
+    transform: translate(-50%, 0) scale(0.85) rotate(3.5deg);
+  }
+  78% {
+    transform: translate(-50%, 0) scale(0.85) rotate(-1.5deg);
+  }
+  100% {
+    transform: translate(-50%, 0) scale(0.85) rotate(0deg);
+  }
+}
+
+/* 바다: 가라앉으며 사라진다 */
+@keyframes dart-sink {
+  0% {
+    transform: translate(-50%, 0) scale(0.85);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, 10px) scale(0.45);
+    opacity: 0;
+  }
+}
+
+/* 기준 밖: 튕겨 나간다 */
+@keyframes dart-bounce {
+  0% {
+    transform: translate(-50%, 0) scale(0.85) rotate(0deg);
+    opacity: 1;
+  }
+  35% {
+    transform: translate(calc(-50% + 22px), -36px) scale(0.9) rotate(40deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + 64px), 24px) scale(0.75) rotate(120deg);
+    opacity: 0;
+  }
+}
+
+/* 다트 그림자: 다트가 가까워질수록 작고 진해진다 */
+.dart-shadow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.35);
+  animation: dart-shadow-in linear both;
+}
+.dart-shadow.is-gone {
+  animation: dart-shadow-out 300ms ease-out both;
+}
+@keyframes dart-shadow-in {
+  0% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+@keyframes dart-shadow-out {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.4);
+    opacity: 0;
+  }
+}
+
+/* 꽂힌 자리에서 퍼지는 고리. 세게 던질수록 크게 퍼진다 */
+.impact-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(88px + var(--power, 0.5) * 64px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  animation: impact-ring 650ms ease-out both;
+}
+.impact-ring.is-ripple {
+  aspect-ratio: 2 / 1;
+  border-color: var(--map-ripple);
+  animation-duration: 800ms;
+}
+.impact-ring.is-spark {
+  width: 56px;
+  border-style: dashed;
+  border-color: var(--muted);
+}
+@keyframes impact-ring {
+  0% {
+    transform: translate(-50%, -50%) scale(0.15);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+/* 꽂히는 순간 지도가 살짝 흔들린다. 세기는 --shake로 */
+.map-shake {
+  animation: map-shake 380ms ease-out;
+}
+@keyframes map-shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(calc(var(--shake, 3px) * -1), calc(var(--shake, 3px) * 0.6));
+  }
+  40% {
+    transform: translate(var(--shake, 3px), calc(var(--shake, 3px) * -0.6));
+  }
+  60% {
+    transform: translate(calc(var(--shake, 3px) * -0.5), calc(var(--shake, 3px) * 0.3));
+  }
+  80% {
+    transform: translate(calc(var(--shake, 3px) * 0.3), 0);
+  }
+}
+
+/* 지도 아래 던지는 자리. 지도가 비쳐 보이도록 아래로 갈수록 종이색이 짙어진다 */
+.throw-lane {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--paper) 88%, transparent) 70%);
+}
+
+/* 던지는 자리의 다트: 손가락을 따라오고(--x, --y), 놓으면 살짝 튕기며 제자리로 돌아온다 */
+.pad-dart {
+  transform: translate(var(--x, 0px), var(--y, 0px));
+  transition: transform 260ms cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.pad-dart.is-dragging {
+  transition: none;
+}
+/* 던진 뒤 서버 응답을 기다리는 잠깐 동안 살짝 들린 채 떨고, 날아가기 시작하면 지도 위 연출이 이어받는다 */
+.pad-dart.is-launched {
+  animation: pad-dart-launch 160ms ease-out forwards;
+}
+.pad-dart.is-hidden {
+  opacity: 0;
+  transition: none;
+}
+.pad-dart.is-nudge {
+  animation: pad-nudge 420ms ease-out;
+}
+@keyframes pad-dart-launch {
+  from {
+    transform: translate(var(--x, 0px), var(--y, 0px));
+  }
+  to {
+    transform: translate(0, -6px) scale(0.96);
+  }
+}
+@keyframes pad-nudge {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  30% {
+    transform: translate(0, -12px);
+  }
+  60% {
+    transform: translate(0, 3px);
+  }
+}
+.pad-chevron {
+  animation: pad-chevron 1.6s ease-in-out infinite;
+}
+@keyframes pad-chevron {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
 }
